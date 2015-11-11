@@ -3,6 +3,8 @@
  */
 package cque;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author Xiong
  * 非阻塞、嵌入式多生产者单消费者队列
@@ -12,6 +14,8 @@ package cque;
 public class IntrusiveMpscQueue<E> {
 	private volatile INode head;
 	private INode queue;
+	private volatile boolean blocked = false;
+	private Object condVar = new Object();
 	
 	/**
 	 * 向队尾插入一个元素
@@ -58,6 +62,108 @@ public class IntrusiveMpscQueue<E> {
 		}else{
 			return null;
 		}
+	}
+	
+	/**
+	 * @param e
+	 */
+	public void put(INode e){
+		add(e);
+		// 如果发现单读线程在阻塞，唤醒它
+		if (isBlocked()){
+			synchronized (condVar){
+				if (isBlocked()){
+					condVar.notify();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 警告：只能在单读线程调用
+	 * @return E or null
+	 */
+	public E take(){
+		assert !isBlocked();
+		E e = poll();
+		if (e != null){
+			return e;
+		}
+
+		synchronized (condVar){
+			block();
+			e = poll();
+			while (e == null){
+				try{
+					condVar.wait();
+				}catch (InterruptedException ex){
+				}
+				
+				e = poll();
+			}
+		}
+
+		unblock();
+		return e;
+	}
+	
+	/**
+	 * 警告：只能在单读线程调用
+	 * @param timeout
+	 * @param tu
+	 * @return
+	 */
+	public E poll(long timeout, TimeUnit tu){
+		assert !isBlocked();
+		if (timeout <= 0){
+			return poll();
+		}
+		
+		if (timeout == Long.MAX_VALUE){
+			return take();
+		}
+		
+		E e = poll();
+		if (e != null){
+			return e;
+		}
+
+		timeout = tu.toMillis(timeout);
+		synchronized (condVar){
+			block();
+			e = poll();
+			long currTimeout = timeout;
+			while (e == null){
+				long bt = System.currentTimeMillis();
+				try{
+					condVar.wait(currTimeout);
+				}catch (InterruptedException ex){
+				}
+				long eclipse = System.currentTimeMillis() - bt;
+				
+				e = poll();
+				if (eclipse >= currTimeout){
+					break;
+				}
+				
+				currTimeout -= eclipse;
+			}
+		}
+
+		unblock();
+		return e;
+	}
+	
+	private boolean isBlocked(){
+		return blocked;
+	}
+	
+	private void block(){
+		blocked = true;
+	}
+	
+	private void unblock(){
+		blocked = false;
 	}
 	
 	private INode dequeue(){

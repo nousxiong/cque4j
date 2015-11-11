@@ -7,6 +7,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
@@ -60,7 +61,7 @@ public class MpscLinkedQueueBase {
 				@Override
 				public void run(){
 					for (int i=0; i<addSize; ++i){
-						que.add(new Data(threadId, i));
+						que.put(new Data(threadId, i));
 					}
 				}
 			});
@@ -69,7 +70,7 @@ public class MpscLinkedQueueBase {
 		
 		int pollSize = addSize * threadNum;
 		for (int i=0; i<pollSize; ){
-			Data d = que.poll();
+			Data d = que.poll(1000, TimeUnit.MILLISECONDS);
 			if (d != null){
 				int threadId = d.getThreadId();
 				int id = d.getId();
