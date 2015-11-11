@@ -164,6 +164,15 @@ public class MpscLinkedQueue<E> {
 	
 	/**
 	 * 警告：只能在单读线程调用
+	 * @param timeout 超时时间（毫秒）
+	 * @return
+	 */
+	public E poll(long timeout){
+		return poll(timeout, TimeUnit.MILLISECONDS);
+	}
+	
+	/**
+	 * 警告：只能在单读线程调用
 	 * @param timeout
 	 * @param tu
 	 * @return
