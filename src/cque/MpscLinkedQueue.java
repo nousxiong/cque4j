@@ -254,7 +254,7 @@ public class MpscLinkedQueue<E> {
 	private E freeNode(INode n){
 		Node<E> node = (Node<E>) n;
 		E e = node.getItem();
-		n.dispose();
+		n.release();
 		return e;
 	}
 

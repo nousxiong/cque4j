@@ -34,5 +34,5 @@ public interface INode {
 	/**
 	 * 释放自身
 	 */
-	public void dispose();
+	public void release();
 }

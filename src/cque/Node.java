@@ -52,7 +52,7 @@ public class Node<E> implements INode {
 	}
 
 	@Override
-	public void dispose() {
+	public void release() {
 		if (freer != null){
 			freer.free(this);
 		}

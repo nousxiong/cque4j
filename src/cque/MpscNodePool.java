@@ -52,18 +52,18 @@ public class MpscNodePool implements IFreer {
 				n = head;
 			}while (n != null && !UNSAFE.compareAndSwapObject(this, headOffset, n, null));
 
-			if (n == null){
-				return null;
-			}
-			
-			if (n.getNext() != null){
+			if (n != null && n.getNext() != null){
 				setCache(n.getNext());
 			}
 		}
 
-		size.decrementAndGet();
-		n.onGet(this);
-		return (T) n;
+		if (n != null){
+			size.decrementAndGet();
+			n.onGet(this);
+			return (T) n;
+		}else{
+			return null;
+		}
 	}
 	
 	@Override

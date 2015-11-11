@@ -64,7 +64,7 @@ public class IntrusiveMpscQueueBase {
 		}
 
 		@Override
-		public void dispose(){
+		public void release(){
 			if (freer != null){
 				freer.free(this);
 			}
