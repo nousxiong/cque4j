@@ -156,7 +156,7 @@ public class Example {
 		}
 
 		@Override
-		public void dispose(){
+		public void release(){
 			if (freer != null){
 				freer.free(this);
 			}
