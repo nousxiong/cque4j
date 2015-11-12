@@ -10,8 +10,8 @@ package cque;
 public class ConcurrentNodePool {
 	private ThreadLocal<MpscNodePool> local = new ThreadLocal<MpscNodePool>();
 	private INodeFactory nodeFactory;
-	private final int initSize;
-	private final int maxSize;
+	private int initSize;
+	private int maxSize;
 	
 	/**
 	 * 创建默认的节点池
@@ -31,6 +31,20 @@ public class ConcurrentNodePool {
 		assert nodeFactory != null;
 		this.nodeFactory = nodeFactory;
 		this.initSize = initSize;
+		this.maxSize = maxSize;
+	}
+	
+	/**
+	 * @param initSize
+	 */
+	public void setInitSize(int initSize){
+		this.initSize = initSize;
+	}
+	
+	/**
+	 * @param maxSize
+	 */
+	public void setMaxSize(int maxSize){
 		this.maxSize = maxSize;
 	}
 	
