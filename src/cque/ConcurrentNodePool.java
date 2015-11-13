@@ -52,7 +52,7 @@ public class ConcurrentNodePool {
 	 * 取得当前线程的节点池
 	 * @return 节点池
 	 */
-	public MpscNodePool getLocalPool(){
+	public INodePool getLocalPool(){
 		MpscNodePool pool = local.get();
 		if (pool == null){
 			INode[] ns = new INode[initSize];
@@ -70,7 +70,7 @@ public class ConcurrentNodePool {
 	 * @return
 	 */
 	public <T> T get(){
-		MpscNodePool pool = getLocalPool();
+		INodePool pool = getLocalPool();
 		return get(pool);
 	}
 
@@ -80,7 +80,7 @@ public class ConcurrentNodePool {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T get(MpscNodePool pool){
+	public <T> T get(INodePool pool){
 		assert pool == getLocalPool();
 		INode n = pool.get();
 		if (n == null){

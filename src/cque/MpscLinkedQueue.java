@@ -47,7 +47,7 @@ public class MpscLinkedQueue<E> {
 	 * 取得当前线程的节点池
 	 * @return 节点池
 	 */
-	public MpscNodePool getLocalPool(){
+	public INodePool getLocalPool(){
 		return pool.getLocalPool();
 	}
 
@@ -56,7 +56,7 @@ public class MpscLinkedQueue<E> {
 	 * @param e 不能是null
 	 */
 	public void add(E e){
-		MpscNodePool pool = getLocalPool();
+		INodePool pool = getLocalPool();
 		add(pool, e);
 	}
 	
@@ -65,7 +65,7 @@ public class MpscLinkedQueue<E> {
 	 * @param pool
 	 * @param e
 	 */
-	public void add(MpscNodePool pool, E e){
+	public void add(INodePool pool, E e){
 		assert e != null;
 		Node<E> n = getNode(pool, e);
 		INode h = null;
@@ -113,7 +113,7 @@ public class MpscLinkedQueue<E> {
 	 * @param e
 	 */
 	public void put(E e){
-		MpscNodePool pool = getLocalPool();
+		INodePool pool = getLocalPool();
 		put(pool, e);
 	}
 	
@@ -122,7 +122,7 @@ public class MpscLinkedQueue<E> {
 	 * @param pool
 	 * @param e
 	 */
-	public void put(MpscNodePool pool, E e){
+	public void put(INodePool pool, E e){
 		add(pool, e);
 		// 如果发现单读线程在阻塞，唤醒它
 		if (isBlocked()){
@@ -244,7 +244,7 @@ public class MpscLinkedQueue<E> {
 		queue = n;
 	}
 	
-	private Node<E> getNode(MpscNodePool pool, E e){
+	private Node<E> getNode(INodePool pool, E e){
 		Node<E> n = this.pool.get(pool);
 		n.setItem(e);
 		return n;

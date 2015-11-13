@@ -7,7 +7,7 @@ package cque;
  * @author Xiong
  * 单线程节点池
  */
-public class NodePool implements IFreer {
+public class NodePool implements INodePool {
 	private INode head;
 	private int size = 0;
 	private final int maxSize;
@@ -35,6 +35,7 @@ public class NodePool implements IFreer {
 		}
 	}
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T get(){
 		INode n = head;

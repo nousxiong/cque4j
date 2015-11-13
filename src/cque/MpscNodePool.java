@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 参考：http://www.boost.org/doc/libs/1_59_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.mp_queue 
  */
 @SuppressWarnings({ "restriction", "rawtypes" })
-public class MpscNodePool implements IFreer {
+public class MpscNodePool implements INodePool {
 	private volatile INode head;
 	private AtomicInteger size = new AtomicInteger(0);
 	private final int maxSize;
@@ -41,9 +41,10 @@ public class MpscNodePool implements IFreer {
 	}
 	
 	/**
-	 * 从池中尝试获取一个节点，如果为null，则使用节点工厂创建一个新节点
-	 * @return 不会返回null
+	 * 从池中尝试获取一个节点
+	 * @return 如果池为空返回null
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T get(){
 		INode n = getCache();
