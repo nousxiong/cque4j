@@ -86,10 +86,12 @@ public class MpscNodePool implements INodePool {
 		size.incrementAndGet();
 	}
 	
+	@Override
 	public int size(){
 		return size.get();
 	}
 	
+	@Override
 	public boolean isEmpty(){
 		return size() == 0;
 	}
