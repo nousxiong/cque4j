@@ -23,6 +23,7 @@ public class IntrusiveQueue<E> {
 			assert head == null;
 			head = e;
 			tail = e;
+			return;
 		}
 		tail.setNext(e);
 		tail = e;

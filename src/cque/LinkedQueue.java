@@ -67,6 +67,7 @@ public class LinkedQueue<E> {
 			assert head == null;
 			head = n;
 			tail = n;
+			return;
 		}
 		tail.setNext(n);
 		tail = n;
