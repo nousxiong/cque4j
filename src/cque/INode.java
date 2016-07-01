@@ -15,6 +15,12 @@ public interface INode {
 	public INode getNext();
 	
 	/**
+	 * 返回下一个节点，之后将其设置为null
+	 * @return
+	 */
+	public INode fetchNext();
+	
+	/**
 	 * 设置下一个节点
 	 * @param n 可以为null
 	 */

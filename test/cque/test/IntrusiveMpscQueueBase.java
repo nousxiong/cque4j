@@ -47,6 +47,13 @@ public class IntrusiveMpscQueueBase {
 		}
 
 		@Override
+		public INode fetchNext() {
+			INode n = next;
+			next = null;
+			return n;
+		}
+
+		@Override
 		public void setNext(INode next){
 			this.next = next;
 		}
@@ -120,6 +127,7 @@ public class IntrusiveMpscQueueBase {
 		for (int id : producerIds){
 			assertTrue(id == addSize - 1);
 		}
+		assertTrue(que.size() == 0);
 		
 		for (Thread thr : thrs){
 			try{

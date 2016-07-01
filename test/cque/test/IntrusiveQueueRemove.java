@@ -5,6 +5,9 @@ package cque.test;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
 import cque.IFreer;
@@ -15,7 +18,7 @@ import cque.IntrusiveQueue;
  * @author Xiong
  *
  */
-public class IntrusiveQueueBase {
+public class IntrusiveQueueRemove {
 	class Data implements INode {
 		private int threadId;
 		private int id;
@@ -86,26 +89,34 @@ public class IntrusiveQueueBase {
 	}
 
 	long handleTest(int index){
-		final int addSize = 100000;
+		final int addSize = 10000;
+		final int multiplier = 71;
+		final int removeSize = addSize / multiplier + 1;
+		List<Data> removes = new ArrayList<Data>(removeSize);
 		
 		long bt = System.currentTimeMillis();
 		
 		for (int i=0; i<addSize; ++i){
-			que.add(new Data(1, i));
-		}
-		
-		int pollSize = addSize;
-		for (int i=0; i<pollSize; ){
-			Data d = que.poll();
-			if (d != null){
-				int threadId = d.getThreadId();
-				assertTrue(threadId == 1);
-				int id = d.getId();
-				assertTrue(id == i);
-				++i;
+			Data dat = new Data(1, i);
+			que.add(dat);
+			if (i % multiplier == 0){
+				removes.add(dat);
 			}
 		}
-		assertTrue(que.size() == 0);
+		
+		for (Data dat : removes){
+			assertTrue(que.remove(dat));
+		}
+		System.out.println(que.size());
+		assertTrue(que.size() == addSize - removeSize);
+		
+		while (true){
+			Data dat = que.poll();
+			if (dat == null){
+				break;
+			}
+			dat.release();
+		}
 		
 		long eclipse = System.currentTimeMillis() - bt;
 		System.out.println(index + " done.");

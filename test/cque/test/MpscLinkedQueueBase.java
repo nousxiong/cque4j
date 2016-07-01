@@ -84,6 +84,7 @@ public class MpscLinkedQueueBase {
 		for (int id : producerIds){
 			assertTrue(id == addSize - 1);
 		}
+		assertTrue(que.size() == 0);
 		
 		for (Thread thr : thrs){
 			try{

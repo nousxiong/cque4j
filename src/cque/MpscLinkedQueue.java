@@ -4,6 +4,7 @@
 package cque;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Xiong
@@ -16,7 +17,7 @@ public class MpscLinkedQueue<E> {
 	private INode queue;
 	private ConcurrentNodePool pool;
 	private volatile boolean blocked = false;
-	private Object condVar = new Object();
+	private AtomicInteger size = new AtomicInteger(0);
 	
 	/**
 	 * 创建一个默认的队列
@@ -73,6 +74,64 @@ public class MpscLinkedQueue<E> {
 			h = head;
 			n.setNext(h);
 		}while (!UNSAFE.compareAndSwapObject(this, headOffset, h, n));
+		size.incrementAndGet();
+	}
+	
+	/**
+	 * 从队列中移除一个指定的元素，使用Object.equals来比较
+	 * 警告：只能单读线程调用
+	 * @param e
+	 * @return true移除成功
+	 */
+	public boolean remove(E e){
+		if (e == null){
+			return false;
+		}
+		
+		// 首先遍历queue，尝试查找并移除e
+		INode last = null;
+		for (INode i = queue; i != null; last = i, i = i.getNext()){
+			if (find(last, i, e)){
+				return true;
+			}
+//			if (e.equals(((Node<E>) i).getItem())){
+//				// 找到，从链表中移除
+//				if (last == null){
+//					queue = i.getNext();
+//				}else{
+//					last.setNext(i.getNext());
+//				}
+//				i.release();
+//				size.decrementAndGet();
+//				return true;
+//			}
+		}
+		
+		// 尝试把head放到last上
+		INode n = null;
+		do{
+			n = head;
+		}while (n != null && !UNSAFE.compareAndSwapObject(this, headOffset, n, null));
+		
+		if (n != null){
+			// 反转
+			n = Node.reverse(n);
+			// 链接到last上
+			if (last != null){
+				last.setNext(n);
+			}else{
+				setQueue(n);
+			}
+			
+			// 遍历n，尝试查找并移除e
+			for (INode i = n; i != null; last = i, i = i.getNext()){
+				if (find(last, i, e)){
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -88,20 +147,13 @@ public class MpscLinkedQueue<E> {
 			
 			if (n != null && n.getNext() != null){
 				// 反转
-				INode last = n;
-				INode first = null;
-				while (last != null){
-					INode tmp = last;
-					last = last.getNext();
-					tmp.setNext(first);
-					first = tmp;
-				}
-				n = first;
+				n = Node.reverse(n);
 				setQueue(n.getNext());
 			}
 		}
 		
 		if (n != null){
+			size.decrementAndGet();
 			return freeNode(n);
 		}else{
 			return null;
@@ -126,9 +178,9 @@ public class MpscLinkedQueue<E> {
 		add(pool, e);
 		// 如果发现单读线程在阻塞，唤醒它
 		if (isBlocked()){
-			synchronized (condVar){
+			synchronized (this){
 				if (isBlocked()){
-					condVar.notify();
+					this.notify();
 				}
 			}
 		}
@@ -145,12 +197,12 @@ public class MpscLinkedQueue<E> {
 			return e;
 		}
 
-		synchronized (condVar){
+		synchronized (this){
 			block();
 			e = poll();
 			while (e == null){
 				try{
-					condVar.wait();
+					this.wait();
 				}catch (InterruptedException ex){
 				}
 				
@@ -193,14 +245,14 @@ public class MpscLinkedQueue<E> {
 		}
 
 		timeout = tu.toMillis(timeout);
-		synchronized (condVar){
+		synchronized (this){
 			block();
 			e = poll();
 			long currTimeout = timeout;
 			while (e == null){
 				long bt = System.currentTimeMillis();
 				try{
-					condVar.wait(currTimeout);
+					this.wait(currTimeout);
 				}catch (InterruptedException ex){
 				}
 				long eclipse = System.currentTimeMillis() - bt;
@@ -218,6 +270,39 @@ public class MpscLinkedQueue<E> {
 		return e;
 	}
 	
+	/**
+	 * 返回当前队列中的元素数量
+	 * @return
+	 */
+	public int size(){
+		return size.get();
+	}
+	
+	/**
+	 * 返回队列是否为空
+	 * @return
+	 */
+	public boolean isEmpty(){
+		return size() == 0;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private boolean find(INode last, INode i, E e){
+		if (e.equals(((Node<E>) i).getItem())){
+			// 找到，从链表中移除
+			INode nx = i.fetchNext();
+			if (last == null){
+				queue = nx;
+			}else{
+				last.setNext(nx);
+			}
+			i.release();
+			size.decrementAndGet();
+			return true;
+		}
+		return false;
+	}
+	
 	private boolean isBlocked(){
 		return blocked;
 	}
@@ -233,8 +318,7 @@ public class MpscLinkedQueue<E> {
 	private INode dequeue(){
 		INode n = queue;
 		if (n != null){
-			queue = n.getNext();
-			n.setNext(null);
+			queue = n.fetchNext();
 		}
 		return n;
 	}

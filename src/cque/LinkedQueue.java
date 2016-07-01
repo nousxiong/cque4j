@@ -11,6 +11,7 @@ public class LinkedQueue<E> {
 	private INode head;
 	private INode tail;
 	private ConcurrentNodePool pool;
+	private int size = 0;
 	
 	/**
 	 * 创建一个默认的队列
@@ -63,6 +64,7 @@ public class LinkedQueue<E> {
 		assert e != null;
 		Node<E> n = getNode(pool, e);
 		
+		++size;
 		if (tail == null){
 			assert head == null;
 			head = n;
@@ -74,6 +76,41 @@ public class LinkedQueue<E> {
 	}
 	
 	/**
+	 * 从队列中移除一个指定的元素，使用Object.equals来比较
+	 * @param e
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public boolean remove(E e){
+		if (e == null || head == null){
+			return false;
+		}
+		
+		// 遍历，尝试查找并移除e
+		for (INode i = head, last = null; i != null; last = i, i = i.getNext()){
+			if (e.equals(((Node<E>) i).getItem())){
+				// 找到，从链表中移除
+				if (last == null){
+					if (head == tail){
+						tail = i.getNext();
+					}
+					head = i.getNext();
+				}else{
+					last.setNext(i.getNext());
+					if (i == tail){
+						tail = last;
+					}
+				}
+				i.release();
+				--size;
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * @return 如果队列空返回null；反之一个有效的元素
 	 */
 	public E poll(){
@@ -82,24 +119,35 @@ public class LinkedQueue<E> {
 		}
 		
 		INode n = head;
-		head = fetchNext(n);
+		head = n.fetchNext();
 		if (head == null){
 			assert n == tail;
 			tail = null;
 		}
+		--size;
 		return freeNode(n);
+	}
+	
+	/**
+	 * 返回当前队列中的元素数量
+	 * @return
+	 */
+	public int size(){
+		return size;
+	}
+	
+	/**
+	 * 是否队列为空
+	 * @return
+	 */
+	public boolean isEmpty(){
+		return size() == 0;
 	}
 	
 	private Node<E> getNode(INodePool pool, E e){
 		Node<E> n = this.pool.get(pool);
 		n.setItem(e);
 		return n;
-	}
-	
-	private INode fetchNext(INode n){
-		INode e = n.getNext();
-		n.setNext(null);
-		return e;
 	}
 	
 	@SuppressWarnings("unchecked")

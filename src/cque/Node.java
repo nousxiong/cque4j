@@ -34,6 +34,13 @@ public class Node<E> implements INode {
 	}
 	
 	@Override
+	public INode fetchNext(){
+		INode n = next;
+		next = null;
+		return n;
+	}
+	
+	@Override
 	public void setNext(INode next){
 		this.next = next;
 	}
@@ -56,5 +63,23 @@ public class Node<E> implements INode {
 		if (freer != null){
 			freer.free(this);
 		}
+	}
+	
+	/**
+	 * 反转链表，适用任何元素数量的单链表
+	 * @param n 链表头
+	 * @return 反转后的链表尾
+	 */
+	public static INode reverse(INode n){
+		INode last = n;
+		INode first = null;
+		while (last != null){
+			INode tmp = last;
+			last = last.getNext();
+			tmp.setNext(first);
+			first = tmp;
+		}
+		
+		return first;
 	}
 }
