@@ -94,17 +94,6 @@ public class MpscLinkedQueue<E> {
 			if (find(last, i, e)){
 				return true;
 			}
-//			if (e.equals(((Node<E>) i).getItem())){
-//				// 找到，从链表中移除
-//				if (last == null){
-//					queue = i.getNext();
-//				}else{
-//					last.setNext(i.getNext());
-//				}
-//				i.release();
-//				size.decrementAndGet();
-//				return true;
-//			}
 		}
 		
 		// 尝试把head放到last上
