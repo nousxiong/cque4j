@@ -80,8 +80,34 @@ public class IntrusiveMpscQueue<E> {
 	}
 	
 	/**
-	 * @return 如果队列空返回null；反之一个有效的元素
+	 * 清空队列
 	 * 警告：只能在单读线程调用
+	 * 警告：被清空的元素会自动调用release
+	 */
+	public void clear(){
+		// 首先尝试清空queue
+		int clearSize = clearQueue();
+		
+		// 尝试把head放到queue上
+		INode n = null;
+		do{
+			n = head;
+		}while (n != null && !UNSAFE.compareAndSwapObject(this, headOffset, n, null));
+		
+		if (n != null){
+			// 不用反转，直接链接到queue上，然后再清空
+			setQueue(n);
+			clearSize += clearQueue();
+		}
+		
+		if (clearSize > 0){
+			size.addAndGet(-clearSize);
+		}
+	}
+	
+	/**
+	 * 警告：只能在单读线程调用
+	 * @return 如果队列空返回null；反之一个有效的元素
 	 */
 	@SuppressWarnings("unchecked")
 	public E poll(){
@@ -259,6 +285,19 @@ public class IntrusiveMpscQueue<E> {
 	private void setQueue(INode n){
 		assert queue == null;
 		queue = n;
+	}
+	
+	private int clearQueue(){
+		int clearSize = 0;
+		while (true){
+			INode n = dequeue();
+			if (n == null){
+				break;
+			}
+			++clearSize;
+			n.release();
+		}
+		return clearSize;
 	}
 
 	private static final sun.misc.Unsafe UNSAFE;

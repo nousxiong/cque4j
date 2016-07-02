@@ -67,22 +67,24 @@ public class IntrusiveQueue<E> {
 	}
 	
 	/**
+	 * 清空队列
+	 */
+	public void clear(){
+		while (true){
+			INode n = pollNode();
+			if (n == null){
+				break;
+			}
+			n.release();
+		}
+	}
+	
+	/**
 	 * @return 如果队列空返回null；反之一个有效的元素
 	 */
 	@SuppressWarnings("unchecked")
 	public E poll(){
-		if (head == null){
-			return null;
-		}
-		
-		INode n = head;
-		head = n.fetchNext();
-		if (head == null){
-			assert n == tail;
-			tail = null;
-		}
-		--size;
-		return (E) n;
+		return (E) pollNode();
 	}
 	
 	/**
@@ -99,5 +101,20 @@ public class IntrusiveQueue<E> {
 	 */
 	public boolean isEmpty(){
 		return size() == 0;
+	}
+	
+	private INode pollNode(){
+		if (head == null){
+			return null;
+		}
+		
+		INode n = head;
+		head = n.fetchNext();
+		if (head == null){
+			assert n == tail;
+			tail = null;
+		}
+		--size;
+		return n;
 	}
 }

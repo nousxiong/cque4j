@@ -110,13 +110,8 @@ public class IntrusiveQueueRemove {
 		System.out.println(que.size());
 		assertTrue(que.size() == addSize - removeSize);
 		
-		while (true){
-			Data dat = que.poll();
-			if (dat == null){
-				break;
-			}
-			dat.release();
-		}
+		que.clear();
+		assertTrue(que.size() == 0);
 		
 		long eclipse = System.currentTimeMillis() - bt;
 		System.out.println(index + " done.");

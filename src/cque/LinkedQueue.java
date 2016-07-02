@@ -114,18 +114,12 @@ public class LinkedQueue<E> {
 	 * @return 如果队列空返回null；反之一个有效的元素
 	 */
 	public E poll(){
-		if (head == null){
+		INode n = pollNode();
+		if (n != null){
+			return freeNode(n);
+		}else{
 			return null;
 		}
-		
-		INode n = head;
-		head = n.fetchNext();
-		if (head == null){
-			assert n == tail;
-			tail = null;
-		}
-		--size;
-		return freeNode(n);
 	}
 	
 	/**
@@ -142,6 +136,34 @@ public class LinkedQueue<E> {
 	 */
 	public boolean isEmpty(){
 		return size() == 0;
+	}
+	
+	/**
+	 * 清空队列
+	 */
+	public void clear(){
+		while (true){
+			INode n = pollNode();
+			if (n == null){
+				break;
+			}
+			n.release();
+		}
+	}
+	
+	private INode pollNode(){
+		if (head == null){
+			return null;
+		}
+		
+		INode n = head;
+		head = n.fetchNext();
+		if (head == null){
+			assert n == tail;
+			tail = null;
+		}
+		--size;
+		return n;
 	}
 	
 	private Node<E> getNode(INodePool pool, E e){
