@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MpscLinkedQueue<E> {
 	private volatile INode head;
 	private INode queue;
-	private ConcurrentNodePool pool;
+	private ConcurrentNodePool<Node<E>> pool;
 	private volatile boolean blocked = false;
 	private AtomicInteger size = new AtomicInteger(0);
 	
@@ -33,14 +33,14 @@ public class MpscLinkedQueue<E> {
 	 * @param maxPoolSize 池最大大小，可以小于池初始大小
 	 */
 	public MpscLinkedQueue(INodeFactory nodeFactory, int initPoolSize, int maxPoolSize){
-		this.pool = new ConcurrentNodePool(nodeFactory, initPoolSize, maxPoolSize);
+		this.pool = new ConcurrentNodePool<Node<E>>(nodeFactory, initPoolSize, maxPoolSize);
 	}
 	
 	/**
 	 * 使用用户指定的节点池来创建队列
 	 * @param pool 外部用户创建的节点池
 	 */
-	public MpscLinkedQueue(ConcurrentNodePool pool){
+	public MpscLinkedQueue(ConcurrentNodePool<Node<E>> pool){
 		this.pool = pool;
 	}
 	

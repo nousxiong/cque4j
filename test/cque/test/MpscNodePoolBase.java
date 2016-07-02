@@ -22,7 +22,7 @@ public class MpscNodePoolBase {
 		public int i = 1;
 		public String str = "my data";
 	}
-	private static final MpscNodePool nodeQue = new MpscNodePool();
+	private static final MpscNodePool<Node<Data>> nodeQue = new MpscNodePool<Node<Data>>();
 	private static final int freeSize = 100000;
 	
 	@Test

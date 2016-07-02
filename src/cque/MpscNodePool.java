@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 参考：http://www.boost.org/doc/libs/1_59_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.mp_queue 
  */
 @SuppressWarnings({ "restriction", "rawtypes" })
-public class MpscNodePool implements INodePool {
+public class MpscNodePool<E> implements INodePool {
 	private volatile INode head;
 	private AtomicInteger size = new AtomicInteger(0);
 	private final int maxSize;
@@ -46,7 +46,7 @@ public class MpscNodePool implements INodePool {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T get(){
+	public E get(){
 		INode n = getCache();
 		if (n == null){
 			do{
@@ -61,7 +61,7 @@ public class MpscNodePool implements INodePool {
 		if (n != null){
 			size.decrementAndGet();
 			n.onGet(this);
-			return (T) n;
+			return (E) n;
 		}else{
 			return null;
 		}

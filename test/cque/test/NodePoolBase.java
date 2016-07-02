@@ -18,7 +18,7 @@ public class NodePoolBase {
 
 	@Test
 	public void test() {
-		NodePool pool = new NodePool();
+		NodePool<Node<Long>> pool = new NodePool<Node<Long>>();
 		final int count = 300000;
 		for (int i=0; i<count; ++i){
 			if (i % 3 == 0){

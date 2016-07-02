@@ -7,7 +7,7 @@ package cque;
  * @author Xiong
  * 单线程节点池
  */
-public class NodePool implements INodePool {
+public class NodePool<E> implements INodePool {
 	private INode head;
 	private int size = 0;
 	private final int maxSize;
@@ -37,14 +37,14 @@ public class NodePool implements INodePool {
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T get(){
+	public E get(){
 		INode n = head;
 		if (n != null){
 			head = n.getNext();
 			n.setNext(null);
 			--size;
 			n.onGet(this);
-			return (T) n;
+			return (E) n;
 		}else{
 			return null;
 		}

@@ -10,7 +10,7 @@ package cque;
 public class LinkedQueue<E> {
 	private INode head;
 	private INode tail;
-	private ConcurrentNodePool pool;
+	private ConcurrentNodePool<Node<E>> pool;
 	private int size = 0;
 	
 	/**
@@ -27,14 +27,14 @@ public class LinkedQueue<E> {
 	 * @param maxPoolSize 池最大大小，可以小于池初始大小
 	 */
 	public LinkedQueue(INodeFactory nodeFactory, int initPoolSize, int maxPoolSize){
-		this(new ConcurrentNodePool(nodeFactory, initPoolSize, maxPoolSize));
+		this(new ConcurrentNodePool<Node<E>>(nodeFactory, initPoolSize, maxPoolSize));
 	}
 	
 	/**
 	 * 使用用户指定的节点池来创建队列
 	 * @param pool 外部用户创建的节点池
 	 */
-	public LinkedQueue(ConcurrentNodePool pool){
+	public LinkedQueue(ConcurrentNodePool<Node<E>> pool){
 		this.pool = pool;
 	}
 	
