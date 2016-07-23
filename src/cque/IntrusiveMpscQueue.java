@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 参考：http://www.boost.org/doc/libs/1_59_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.mp_queue 
  */
 @SuppressWarnings({ "restriction", "rawtypes" })
-public class IntrusiveMpscQueue<E> {
+public class IntrusiveMpscQueue<E extends INode> {
 	private volatile INode head;
 	private INode queue;
 	private volatile boolean blocked = false;

@@ -7,7 +7,7 @@ package cque;
  * @author Xiong
  * 单线程节点池
  */
-public class NodePool<E> implements INodePool {
+public class NodePool<E extends INode> implements INodePool {
 	private INode head;
 	private int size = 0;
 	private final int maxSize;

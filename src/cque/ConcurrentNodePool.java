@@ -7,7 +7,7 @@ package cque;
  * @author Xiong
  * 并发节点池（多生产者，多消费者），使用线程局部存储来实现多消费者（get）
  */
-public class ConcurrentNodePool<E> {
+public class ConcurrentNodePool<E extends INode> {
 	private ThreadLocal<MpscNodePool<E>> local = new ThreadLocal<MpscNodePool<E>>();
 	private INodeFactory nodeFactory;
 	private int initSize;
@@ -69,7 +69,7 @@ public class ConcurrentNodePool<E> {
 	 * 从池中获取一个可用的节点
 	 * @return
 	 */
-	public <T> T get(){
+	public E get(){
 		INodePool pool = getLocalPool();
 		return get(pool);
 	}
@@ -80,13 +80,13 @@ public class ConcurrentNodePool<E> {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T get(INodePool pool){
+	public E get(INodePool pool){
 		assert pool == getLocalPool();
 		INode n = pool.get();
 		if (n == null){
 			n = nodeFactory.createInstance();
 			n.onGet(pool);
 		}
-		return (T) n;
+		return (E) n;
 	}
 }

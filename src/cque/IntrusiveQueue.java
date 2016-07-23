@@ -7,7 +7,7 @@ package cque;
  * @author Xiong
  * 嵌入式单线程队列
  */
-public class IntrusiveQueue<E> {
+public class IntrusiveQueue<E extends INode> {
 	private INode head;
 	private INode tail;
 	private int size = 0;
