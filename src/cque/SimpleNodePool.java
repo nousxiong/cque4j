@@ -78,4 +78,15 @@ public class SimpleNodePool<E extends INode> {
 		}
 		return pool;
 	}
+	
+	/**
+	 * 获取节点池
+	 * @return
+	 */
+	public NodePool<E> getPool(INode[] initList){
+		if (pool == null){
+			pool = new NodePool<E>(initList, maxSize);
+		}
+		return pool;
+	}
 }

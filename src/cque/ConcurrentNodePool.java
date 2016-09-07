@@ -64,6 +64,20 @@ public class ConcurrentNodePool<E extends INode> {
 		}
 		return pool;
 	}
+	
+	/**
+	 * 取得当前线程的节点池
+	 * @param initList
+	 * @return
+	 */
+	public MpscNodePool<E> getLocalPool(INode[] initList){
+		MpscNodePool<E> pool = local.get();
+		if (pool == null){
+			pool = new MpscNodePool<E>(initList, maxSize);
+			local.set(pool);
+		}
+		return pool;
+	}
 
 	/**
 	 * 从池中获取一个可用的节点
