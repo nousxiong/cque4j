@@ -17,7 +17,7 @@ public class IntrusiveQueue<E extends INode> {
 	 * @param pool
 	 * @param e
 	 */
-	public void add(INode e){
+	public void add(E e){
 		assert e != null;
 		
 		++size;

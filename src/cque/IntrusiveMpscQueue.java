@@ -22,7 +22,7 @@ public class IntrusiveMpscQueue<E extends INode> {
 	 * 向队尾插入一个元素
 	 * @param e 不能是null
 	 */
-	public void add(INode e){
+	public void add(E e){
 		assert e != null;
 		INode h = null;
 		do{
@@ -135,7 +135,7 @@ public class IntrusiveMpscQueue<E extends INode> {
 	/**
 	 * @param e
 	 */
-	public void put(INode e){
+	public void put(E e){
 		add(e);
 		// 如果发现单读线程在阻塞，唤醒它
 		if (isBlocked()){
