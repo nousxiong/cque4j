@@ -5,6 +5,9 @@ package cque;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Xiong
@@ -13,10 +16,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @SuppressWarnings({ "restriction", "rawtypes" })
 public class IntrusiveMpscQueue<E extends INode> {
+	private final Lock sync;
+	private final Condition cond;
 	private volatile INode head;
 	private INode queue;
 	private volatile boolean blocked = false;
 	private AtomicInteger size = new AtomicInteger(0);
+	
+	public IntrusiveMpscQueue(){
+		this(new ReentrantLock());
+	}
+	
+	public IntrusiveMpscQueue(Lock lock){
+		if (lock == null){
+			throw new NullPointerException();
+		}
+		this.sync = lock;
+		this.cond = lock.newCondition();
+	}
 	
 	/**
 	 * 向队尾插入一个元素
@@ -139,10 +156,13 @@ public class IntrusiveMpscQueue<E extends INode> {
 		add(e);
 		// 如果发现单读线程在阻塞，唤醒它
 		if (isBlocked()){
-			synchronized (this){
+			sync.lock();
+			try{
 				if (isBlocked()){
-					this.notify();
+					cond.signal();
 				}
+			}finally{
+				sync.unlock();
 			}
 		}
 	}
@@ -158,17 +178,20 @@ public class IntrusiveMpscQueue<E extends INode> {
 			return e;
 		}
 
-		synchronized (this){
+		sync.lock();
+		try{
 			block();
 			e = poll();
 			while (e == null){
 				try{
-					this.wait();
+					cond.await();
 				}catch (InterruptedException ex){
 				}
 				
 				e = poll();
 			}
+		}finally{
+			sync.unlock();
 		}
 
 		unblock();
@@ -206,14 +229,15 @@ public class IntrusiveMpscQueue<E extends INode> {
 		}
 
 		timeout = tu.toMillis(timeout);
-		synchronized (this){
+		sync.lock();
+		try{
 			block();
 			e = poll();
 			long currTimeout = timeout;
 			while (e == null){
 				long bt = System.currentTimeMillis();
 				try{
-					this.wait(currTimeout);
+					cond.await(currTimeout, TimeUnit.MILLISECONDS);
 				}catch (InterruptedException ex){
 				}
 				long eclipse = System.currentTimeMillis() - bt;
@@ -225,6 +249,8 @@ public class IntrusiveMpscQueue<E extends INode> {
 				
 				currTimeout -= eclipse;
 			}
+		}finally{
+			sync.unlock();
 		}
 
 		unblock();

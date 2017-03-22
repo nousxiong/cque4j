@@ -7,10 +7,8 @@ package cque;
  * @author Xiong
  * 非嵌入式并发队列的节点
  */
-public class Node<E> implements INode {
+public class Node<E> extends AbstractNode {
 	private E item;
-	private INode next;
-	private IFreer freer;
 	
 	/**
 	 * 获取保存的元素
@@ -27,42 +25,10 @@ public class Node<E> implements INode {
 	public void setItem(E item){
 		this.item = item;
 	}
-	
-	@Override
-	public INode getNext(){
-		return next;
-	}
-	
-	@Override
-	public INode fetchNext(){
-		INode n = next;
-		next = null;
-		return n;
-	}
-	
-	@Override
-	public void setNext(INode next){
-		this.next = next;
-	}
 
 	@Override
-	public void onGet(IFreer freer){
-		this.freer = freer;
-		this.next = null;
-	}
-	
-	@Override
-	public void onFree(){
+	protected void reset(){
 		item = null;
-		next = null;
-		freer = null;
-	}
-
-	@Override
-	public void release() {
-		if (freer != null){
-			freer.free(this);
-		}
 	}
 	
 	/**

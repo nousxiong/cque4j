@@ -23,7 +23,6 @@ import cque.MpscLinkedQueue;
 
 /**
  * @author Xiong
- * remember add vm arg: -ea, for enable assert
  */
 public class Example {
 	class Data {
@@ -109,10 +108,9 @@ import cque.IntrusiveMpscQueue;
 
 /**
  * @author Xiong
- * remember add vm arg: -ea, for enable assert
  */
 public class Example {
-	class Data implements INode {
+	class Data extends AbstractNode {
 		private int threadId;
 		private int id;
 		
@@ -127,39 +125,6 @@ public class Example {
 		
 		public int getId(){
 			return id;
-		}
-		
-		/** below code is implements of INode */
-		private INode next;
-		private IFreer freer;
-
-		@Override
-		public INode getNext(){
-			return next;
-		}
-
-		@Override
-		public void setNext(INode next){
-			this.next = next;
-		}
-
-		@Override
-		public void onGet(IFreer freer){
-			this.freer = freer;
-			this.next = null;
-		}
-
-		@Override
-		public void onFree(){
-			next = null;
-			freer = null;
-		}
-
-		@Override
-		public void release(){
-			if (freer != null){
-				freer.free(this);
-			}
 		}
 	}
 	

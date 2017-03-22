@@ -10,8 +10,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import cque.IFreer;
-import cque.INode;
+import cque.AbstractNode;
 import cque.IntrusiveQueue;
 
 /**
@@ -19,7 +18,7 @@ import cque.IntrusiveQueue;
  *
  */
 public class IntrusiveQueueRemove {
-	class Data implements INode {
+	class Data extends AbstractNode {
 		private int threadId;
 		private int id;
 		
@@ -34,46 +33,6 @@ public class IntrusiveQueueRemove {
 		
 		public int getId(){
 			return id;
-		}
-		
-		/** below code is implements of INode */
-		private INode next;
-		private IFreer freer;
-
-		@Override
-		public INode getNext(){
-			return next;
-		}
-
-		@Override
-		public INode fetchNext() {
-			INode n = next;
-			next = null;
-			return n;
-		}
-
-		@Override
-		public void setNext(INode next){
-			this.next = next;
-		}
-
-		@Override
-		public void onGet(IFreer freer){
-			this.freer = freer;
-			this.next = null;
-		}
-
-		@Override
-		public void onFree(){
-			next = null;
-			freer = null;
-		}
-
-		@Override
-		public void release(){
-			if (freer != null){
-				freer.free(this);
-			}
 		}
 	}
 	

@@ -5,6 +5,9 @@ package cque;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Xiong
@@ -13,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @SuppressWarnings({ "restriction", "rawtypes" })
 public class MpscLinkedQueue<E> {
+	private final Lock sync;
+	private final Condition cond;
 	private volatile INode head;
 	private INode queue;
 	private ConcurrentNodePool<Node<E>> pool;
@@ -26,6 +31,10 @@ public class MpscLinkedQueue<E> {
 		this(new NodeFactory<E>(), 0, Integer.MAX_VALUE);
 	}
 	
+	public MpscLinkedQueue(Lock lock){
+		this(lock, new NodeFactory<E>(), 0, Integer.MAX_VALUE);
+	}
+	
 	/**
 	 * 使用指定的参数来创建队列
 	 * @param nodeFactory 节点工厂，可以为null
@@ -33,6 +42,16 @@ public class MpscLinkedQueue<E> {
 	 * @param maxPoolSize 池最大大小，可以小于池初始大小
 	 */
 	public MpscLinkedQueue(INodeFactory nodeFactory, int initPoolSize, int maxPoolSize){
+		this(new ReentrantLock(), nodeFactory, initPoolSize, maxPoolSize);
+	}
+	
+	public MpscLinkedQueue(Lock lock, INodeFactory nodeFactory, int initPoolSize, int maxPoolSize){
+		if (lock == null){
+			throw new NullPointerException();
+		}
+		
+		this.sync = lock;
+		this.cond = lock.newCondition();
 		this.pool = new ConcurrentNodePool<Node<E>>(nodeFactory, initPoolSize, maxPoolSize);
 	}
 	
@@ -41,6 +60,16 @@ public class MpscLinkedQueue<E> {
 	 * @param pool 外部用户创建的节点池
 	 */
 	public MpscLinkedQueue(ConcurrentNodePool<Node<E>> pool){
+		this(new ReentrantLock(), pool);
+	}
+	
+	public MpscLinkedQueue(Lock lock, ConcurrentNodePool<Node<E>> pool){
+		if (lock == null){
+			throw new NullPointerException();
+		}
+		
+		this.sync = lock;
+		this.cond = lock.newCondition();
 		this.pool = pool;
 	}
 	
@@ -193,10 +222,13 @@ public class MpscLinkedQueue<E> {
 		add(pool, e);
 		// 如果发现单读线程在阻塞，唤醒它
 		if (isBlocked()){
-			synchronized (this){
+			sync.lock();
+			try{
 				if (isBlocked()){
-					this.notify();
+					cond.signal();
 				}
+			}finally{
+				sync.unlock();
 			}
 		}
 	}
@@ -212,17 +244,20 @@ public class MpscLinkedQueue<E> {
 			return e;
 		}
 
-		synchronized (this){
+		sync.lock();
+		try{
 			block();
 			e = poll();
 			while (e == null){
 				try{
-					this.wait();
+					cond.await();
 				}catch (InterruptedException ex){
 				}
 				
 				e = poll();
 			}
+		}finally{
+			sync.unlock();
 		}
 
 		unblock();
@@ -260,14 +295,15 @@ public class MpscLinkedQueue<E> {
 		}
 
 		timeout = tu.toMillis(timeout);
-		synchronized (this){
+		sync.lock();
+		try{
 			block();
 			e = poll();
 			long currTimeout = timeout;
 			while (e == null){
 				long bt = System.currentTimeMillis();
 				try{
-					this.wait(currTimeout);
+					cond.await(currTimeout, TimeUnit.MILLISECONDS);
 				}catch (InterruptedException ex){
 				}
 				long eclipse = System.currentTimeMillis() - bt;
@@ -279,6 +315,8 @@ public class MpscLinkedQueue<E> {
 				
 				currTimeout -= eclipse;
 			}
+		}finally{
+			sync.unlock();
 		}
 
 		unblock();
