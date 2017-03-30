@@ -14,25 +14,30 @@ import java.util.concurrent.locks.ReentrantLock;
  * 非嵌入式多生产者单消费者队列
  * 参考：http://www.boost.org/doc/libs/1_59_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.mp_queue 
  */
-@SuppressWarnings({ "restriction", "rawtypes" })
+@SuppressWarnings({ "restriction", "rawtypes", "unused"})
 public class MpscLinkedQueue<E> {
 	private final Lock sync;
 	private final Condition cond;
+	
+	private volatile Object p001, p002, p003, p004, p005, p006, p007;
 	private volatile INode head;
-	private INode queue;
-	private ConcurrentNodePool<Node<E>> pool;
+	private volatile boolean p101, p102, p103, p104, p105, p106, p107;
 	private volatile boolean blocked = false;
+	private volatile int p201, p202, p203, p204, p205, p206, p207;
+	
+	private INode queue;
+	private ConcurrentNodePool<Node<E>> cpool;
 	private AtomicInteger size = new AtomicInteger(0);
 	
 	/**
 	 * 创建一个默认的队列
 	 */
 	public MpscLinkedQueue(){
-		this(new NodeFactory<E>(), 0, Integer.MAX_VALUE);
+		this(new NodeFactory<E>(), PoolUtils.DEFAULT_POOL_SIZE, PoolUtils.DEFAULT_INIT_SIZE, PoolUtils.DEFAULT_MAX_SIZE);
 	}
 	
 	public MpscLinkedQueue(Lock lock){
-		this(lock, new NodeFactory<E>(), 0, Integer.MAX_VALUE);
+		this(lock, new NodeFactory<E>(), PoolUtils.DEFAULT_POOL_SIZE, PoolUtils.DEFAULT_INIT_SIZE, PoolUtils.DEFAULT_MAX_SIZE);
 	}
 	
 	/**
@@ -41,63 +46,49 @@ public class MpscLinkedQueue<E> {
 	 * @param initPoolSize 池初始大小
 	 * @param maxPoolSize 池最大大小，可以小于池初始大小
 	 */
-	public MpscLinkedQueue(INodeFactory nodeFactory, int initPoolSize, int maxPoolSize){
-		this(new ReentrantLock(), nodeFactory, initPoolSize, maxPoolSize);
+	public MpscLinkedQueue(INodeFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
+		this(new ReentrantLock(), nodeFactory, poolSize, initPoolSize, maxPoolSize);
 	}
 	
-	public MpscLinkedQueue(Lock lock, INodeFactory nodeFactory, int initPoolSize, int maxPoolSize){
+	public MpscLinkedQueue(Lock lock, INodeFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
 		if (lock == null){
 			throw new NullPointerException();
 		}
 		
 		this.sync = lock;
 		this.cond = lock.newCondition();
-		this.pool = new ConcurrentNodePool<Node<E>>(nodeFactory, initPoolSize, maxPoolSize);
+		this.cpool = new ConcurrentNodePool<Node<E>>(nodeFactory, poolSize, initPoolSize, maxPoolSize);
 	}
 	
 	/**
 	 * 使用用户指定的节点池来创建队列
 	 * @param pool 外部用户创建的节点池
 	 */
-	public MpscLinkedQueue(ConcurrentNodePool<Node<E>> pool){
-		this(new ReentrantLock(), pool);
+	public MpscLinkedQueue(ConcurrentNodePool<Node<E>> cpool){
+		this(new ReentrantLock(), cpool);
 	}
 	
-	public MpscLinkedQueue(Lock lock, ConcurrentNodePool<Node<E>> pool){
+	public MpscLinkedQueue(Lock lock, ConcurrentNodePool<Node<E>> cpool){
 		if (lock == null){
 			throw new NullPointerException();
 		}
 		
 		this.sync = lock;
 		this.cond = lock.newCondition();
-		this.pool = pool;
+		this.cpool = cpool;
 	}
 	
-	/**
-	 * 取得当前线程的节点池
-	 * @return 节点池
-	 */
-	public INodePool getLocalPool(){
-		return pool.getLocalPool();
-	}
-
 	/**
 	 * 向队尾插入一个元素
-	 * @param e 不能是null
-	 */
-	public void add(E e){
-		INodePool pool = getLocalPool();
-		add(pool, e);
-	}
-	
-	/**
-	 * 使用由用户之前保存的节点池向队尾插入一个元素
 	 * @param pool
 	 * @param e
 	 */
-	public void add(INodePool pool, E e){
-		assert e != null;
-		Node<E> n = getNode(pool, e);
+	public void add(E e){
+		if (e == null){
+			throw new IllegalArgumentException("null values not allowed");
+		}
+		
+		Node<E> n = borrowNode(e);
 		INode h = null;
 		do{
 			h = head;
@@ -198,7 +189,7 @@ public class MpscLinkedQueue<E> {
 		
 		if (n != null){
 			size.decrementAndGet();
-			return freeNode(n);
+			return returnNode(n);
 		}else{
 			return null;
 		}
@@ -209,17 +200,7 @@ public class MpscLinkedQueue<E> {
 	 * @param e
 	 */
 	public void put(E e){
-		INodePool pool = getLocalPool();
-		put(pool, e);
-	}
-	
-	/**
-	 * 使用由用户之前保存的节点池向队尾插入一个元素，如果发现单读线程在阻塞，唤醒它
-	 * @param pool
-	 * @param e
-	 */
-	public void put(INodePool pool, E e){
-		add(pool, e);
+		add(e);
 		// 如果发现单读线程在阻塞，唤醒它
 		if (isBlocked()){
 			sync.lock();
@@ -394,14 +375,14 @@ public class MpscLinkedQueue<E> {
 		return clearSize;
 	}
 	
-	private Node<E> getNode(INodePool pool, E e){
-		Node<E> n = this.pool.get(pool);
+	private Node<E> borrowNode(E e){
+		Node<E> n = cpool.borrowObject();
 		n.setItem(e);
 		return n;
 	}
 	
 	@SuppressWarnings("unchecked")
-	private E freeNode(INode n){
+	private E returnNode(INode n){
 		Node<E> node = (Node<E>) n;
 		E e = node.getItem();
 		n.release();

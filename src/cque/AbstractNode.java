@@ -9,7 +9,7 @@ package cque;
  */
 public class AbstractNode implements INode {
 	protected INode next;
-	protected IFreer freer;
+	protected IRecycler recycler;
 	
 	/**
 	 * 用户如果需要，可以实现此清理方法
@@ -35,23 +35,22 @@ public class AbstractNode implements INode {
 	}
 	
 	@Override
-	public void onGet(IFreer freer) {
-		this.freer = freer;
+	public void onBorrowed(IRecycler recycler) {
+		this.recycler = recycler;
 		this.next = null;
 	}
 	
 	@Override
-	public void onFree() {
+	public void onReturn() {
 		reset();
-		
 		next = null;
-		freer = null;
+		recycler = null;
 	}
 	
 	@Override
 	public void release() {
-		if (freer != null){
-			freer.free(this);
+		if (recycler != null){
+			recycler.returnObject(this);
 		}
 	}
 }

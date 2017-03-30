@@ -14,14 +14,19 @@ import java.util.concurrent.locks.ReentrantLock;
  * 非阻塞、嵌入式多生产者单消费者队列
  * 参考：http://www.boost.org/doc/libs/1_59_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.mp_queue 
  */
-@SuppressWarnings({ "restriction", "rawtypes" })
+@SuppressWarnings({ "restriction", "rawtypes", "unused"})
 public class IntrusiveMpscQueue<E extends INode> {
 	private final Lock sync;
 	private final Condition cond;
+	
+	private volatile Object p001, p002, p003, p004, p005, p006, p007;
 	private volatile INode head;
-	private INode queue;
+	private volatile boolean p101, p102, p103, p104, p105, p106, p107;
 	private volatile boolean blocked = false;
-	private AtomicInteger size = new AtomicInteger(0);
+	private volatile int p201, p202, p203, p204, p205, p206, p207;
+	
+	private INode queue;
+	private final AtomicInteger size = new AtomicInteger(0);
 	
 	public IntrusiveMpscQueue(){
 		this(new ReentrantLock());

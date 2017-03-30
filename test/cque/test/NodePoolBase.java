@@ -22,9 +22,9 @@ public class NodePoolBase {
 		final int count = 300000;
 		for (int i=0; i<count; ++i){
 			if (i % 3 == 0){
-				pool.free(new Node<Long>());
+				pool.returnObject(new Node<Long>());
 			}else{
-				Node<Long> n = pool.get();
+				Node<Long> n = pool.borrowObject();
 				if (n != null){
 					n.release();
 				}

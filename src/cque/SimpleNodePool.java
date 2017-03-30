@@ -10,8 +10,6 @@ package cque;
 public class SimpleNodePool<E extends INode> {
 	private NodePool<E> pool;
 	private INodeFactory nodeFactory;
-	private int initSize;
-	private int maxSize;
 	
 	/**
 	 * 创建默认的节点池
@@ -28,24 +26,19 @@ public class SimpleNodePool<E extends INode> {
 	 * @param maxSize
 	 */
 	public SimpleNodePool(INodeFactory nodeFactory, int initSize, int maxSize){
-		assert nodeFactory != null;
+		if (nodeFactory == null){
+			throw new IllegalArgumentException("null values not allowed");
+		}
+		
 		this.nodeFactory = nodeFactory;
-		this.initSize = initSize;
-		this.maxSize = maxSize;
-	}
-	
-	/**
-	 * @param initSize
-	 */
-	public void setInitSize(int initSize){
-		this.initSize = initSize;
-	}
-	
-	/**
-	 * @param maxSize
-	 */
-	public void setMaxSize(int maxSize){
-		this.maxSize = maxSize;
+		INode[] initNodes = null;
+		if (initSize > 0){
+			initNodes = new INode[initSize];
+			for (int n=0; n<initSize; ++n){
+				initNodes[n] = nodeFactory.createInstance();
+			}
+		}
+		this.pool = new NodePool<E>(initNodes, maxSize);
 	}
 
 	/**
@@ -53,40 +46,13 @@ public class SimpleNodePool<E extends INode> {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public E get(){
-		NodePool<E> pool = getPool();
-		E e = pool.get();
+	public E borrowObject(){
+		E e = pool.borrowObject();
 		if (e == null){
 			INode n = nodeFactory.createInstance();
-			n.onGet(pool);
+			n.onBorrowed(pool);
 			e = (E) n;
 		}
 		return e;
-	}
-	
-	/**
-	 * 获取节点池
-	 * @return
-	 */
-	public NodePool<E> getPool(){
-		if (pool == null){
-			INode[] ns = new INode[initSize];
-			for (int i=0; i<initSize; ++i){
-				ns[i] = nodeFactory.createInstance();
-			}
-			pool = new NodePool<E>(ns, maxSize);
-		}
-		return pool;
-	}
-	
-	/**
-	 * 获取节点池
-	 * @return
-	 */
-	public NodePool<E> getPool(INode[] initList){
-		if (pool == null){
-			pool = new NodePool<E>(initList, maxSize);
-		}
-		return pool;
 	}
 }

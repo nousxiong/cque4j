@@ -7,22 +7,23 @@ package cque;
  * @author Xiong
  *
  */
-public interface INodePool extends IFreer {
+public interface INodePool<E extends INode> extends IRecycler {
+	
 	/**
 	 * 从池中获取一个可用的对象
 	 * @return
 	 */
-	public <T> T get();
+	E borrowObject();
 	
 	/**
 	 * 返回当前池的大小
 	 * @return
 	 */
-	public int size();
+	int size();
 	
 	/**
 	 * 当前池是否为空
 	 * @return
 	 */
-	public boolean isEmpty();
+	boolean isEmpty();
 }

@@ -7,7 +7,7 @@ package cque;
  * @author Xiong
  * 单线程节点池
  */
-public class NodePool<E extends INode> implements INodePool {
+public class NodePool<E extends INode> implements INodePool<E> {
 	private INode head;
 	private int size = 0;
 	private final int maxSize;
@@ -37,13 +37,13 @@ public class NodePool<E extends INode> implements INodePool {
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public E get(){
+	public E borrowObject(){
 		INode n = head;
 		if (n != null){
 			head = n.getNext();
 			n.setNext(null);
 			--size;
-			n.onGet(this);
+			n.onBorrowed(this);
 			return (E) n;
 		}else{
 			return null;
@@ -51,16 +51,17 @@ public class NodePool<E extends INode> implements INodePool {
 	}
 	
 	@Override
-	public void free(INode n) {
-		if (n == null){
+	public void returnObject(IPooledObject po) {
+		if (po == null){
 			return;
 		}
 
-		n.onFree();
+		po.onReturn();
 		if (size >= maxSize){
 			return;
 		}
 		
+		INode n = (INode) po;
 		n.setNext(head);
 		head = n;
 		++size;

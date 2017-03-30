@@ -5,20 +5,20 @@ package cque;
 
 /**
  * @author Xiong
- * 并发节点池（多生产者，多消费者），使用线程局部存储来实现多消费者（get）
+ * 并发节点池（多生产者，多消费者），内部可能有多个池
  */
 public class ConcurrentNodePool<E extends INode> {
-	private ThreadLocal<MpscNodePool<E>> local = new ThreadLocal<MpscNodePool<E>>();
-	private INodeFactory nodeFactory;
-	private int initSize;
-	private int maxSize;
+	private MpmcNodePool<E>[] pools;
+	private final int poolSize;
+	private final INodeFactory nodeFactory;
+	private int polling = 0;
 	
 	/**
 	 * 创建默认的节点池
 	 * @param nodeFactory 不可为null
 	 */
 	public ConcurrentNodePool(INodeFactory nodeFactory){
-		this(nodeFactory, 0, Integer.MAX_VALUE);
+		this(nodeFactory, PoolUtils.DEFAULT_POOL_SIZE, PoolUtils.DEFAULT_INIT_SIZE, PoolUtils.DEFAULT_MAX_SIZE);
 	}
 	
 	/**
@@ -27,80 +27,44 @@ public class ConcurrentNodePool<E extends INode> {
 	 * @param initSize
 	 * @param maxSize
 	 */
-	public ConcurrentNodePool(INodeFactory nodeFactory, int initSize, int maxSize){
-		assert nodeFactory != null;
+	@SuppressWarnings("unchecked")
+	public ConcurrentNodePool(INodeFactory nodeFactory, int poolSize, int initSize, int maxSize){
+		if (nodeFactory == null){
+			throw new IllegalArgumentException("null values not allowed");
+		}
+		
+		this.poolSize = poolSize;
 		this.nodeFactory = nodeFactory;
-		this.initSize = initSize;
-		this.maxSize = maxSize;
-	}
-	
-	/**
-	 * @param initSize
-	 */
-	public void setInitSize(int initSize){
-		this.initSize = initSize;
-	}
-	
-	/**
-	 * @param maxSize
-	 */
-	public void setMaxSize(int maxSize){
-		this.maxSize = maxSize;
-	}
-	
-	/**
-	 * 取得当前线程的节点池
-	 * @return 节点池
-	 */
-	public MpscNodePool<E> getLocalPool(){
-		MpscNodePool<E> pool = local.get();
-		if (pool == null){
-			INode[] ns = new INode[initSize];
-			for (int i=0; i<initSize; ++i){
-				ns[i] = nodeFactory.createInstance();
+		this.pools = new MpmcNodePool[poolSize];
+		for (int i=0; i<poolSize; ++i){
+			INode[] initNodes = null;
+			if (initSize > 0){
+				initNodes = new INode[initSize];
+				for (int n=0; n<initSize; ++n){
+					initNodes[n] = nodeFactory.createInstance();
+				}
 			}
-			pool = new MpscNodePool<E>(ns, maxSize);
-			local.set(pool);
+			this.pools[i] = new MpmcNodePool<E>(maxSize, initNodes);
 		}
-		return pool;
-	}
-	
-	/**
-	 * 取得当前线程的节点池
-	 * @param initList
-	 * @return
-	 */
-	public MpscNodePool<E> getLocalPool(INode[] initList){
-		MpscNodePool<E> pool = local.get();
-		if (pool == null){
-			pool = new MpscNodePool<E>(initList, maxSize);
-			local.set(pool);
-		}
-		return pool;
 	}
 
 	/**
 	 * 从池中获取一个可用的节点
 	 * @return
 	 */
-	public E get(){
-		INodePool pool = getLocalPool();
-		return get(pool);
-	}
-
-	/**
-	 * 使用由用户之前保存的节点池来get节点
-	 * @param pool 用户之前要在当前线程调用getLocalPool来获取当前线程的节点池
-	 * @return
-	 */
 	@SuppressWarnings("unchecked")
-	public E get(INodePool pool){
-		assert pool == getLocalPool();
-		INode n = pool.get();
+	public E borrowObject(){
+		int i = polling;
+		if (i >= poolSize){
+			i = 0;
+		}
+		MpmcNodePool<E> pool = pools[i];
+		INode n = pool.borrowObject();
 		if (n == null){
 			n = nodeFactory.createInstance();
-			n.onGet(pool);
+			n.onBorrowed(pool);
 		}
+		polling = i;
 		return (E) n;
 	}
 }
