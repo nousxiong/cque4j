@@ -26,7 +26,7 @@ public class MpscLinkedQueue<E> {
 	private volatile int p201, p202, p203, p204, p205, p206, p207;
 	
 	private INode queue;
-	private ConcurrentNodePool<Node<E>> cpool;
+	private ConcurrentObjectPool<Node<E>> cpool;
 	private AtomicInteger size = new AtomicInteger(0);
 	
 	/**
@@ -46,29 +46,29 @@ public class MpscLinkedQueue<E> {
 	 * @param initPoolSize 池初始大小
 	 * @param maxPoolSize 池最大大小，可以小于池初始大小
 	 */
-	public MpscLinkedQueue(INodeFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
+	public MpscLinkedQueue(IObjectFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
 		this(new ReentrantLock(), nodeFactory, poolSize, initPoolSize, maxPoolSize);
 	}
 	
-	public MpscLinkedQueue(Lock lock, INodeFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
+	public MpscLinkedQueue(Lock lock, IObjectFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
 		if (lock == null){
 			throw new NullPointerException();
 		}
 		
 		this.sync = lock;
 		this.cond = lock.newCondition();
-		this.cpool = new ConcurrentNodePool<Node<E>>(nodeFactory, poolSize, initPoolSize, maxPoolSize);
+		this.cpool = new ConcurrentObjectPool<Node<E>>(nodeFactory, poolSize, initPoolSize, maxPoolSize);
 	}
 	
 	/**
 	 * 使用用户指定的节点池来创建队列
 	 * @param pool 外部用户创建的节点池
 	 */
-	public MpscLinkedQueue(ConcurrentNodePool<Node<E>> cpool){
+	public MpscLinkedQueue(ConcurrentObjectPool<Node<E>> cpool){
 		this(new ReentrantLock(), cpool);
 	}
 	
-	public MpscLinkedQueue(Lock lock, ConcurrentNodePool<Node<E>> cpool){
+	public MpscLinkedQueue(Lock lock, ConcurrentObjectPool<Node<E>> cpool){
 		if (lock == null){
 			throw new NullPointerException();
 		}
@@ -393,7 +393,7 @@ public class MpscLinkedQueue<E> {
 	private static final long headOffset;
 	static{
 		try{
-			UNSAFE = Unsafe.get();
+			UNSAFE = UnsafeUtils.get();
 			Class k = MpscLinkedQueue.class;
 			headOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("head"));
 		}catch (Exception e){

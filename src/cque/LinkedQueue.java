@@ -10,7 +10,7 @@ package cque;
 public class LinkedQueue<E> {
 	private INode head;
 	private INode tail;
-	private ConcurrentNodePool<Node<E>> cpool;
+	private IPolicyObjectPool<Node<E>> pool;
 	private int size = 0;
 	
 	/**
@@ -27,16 +27,24 @@ public class LinkedQueue<E> {
 	 * @param initPoolSize 池初始大小
 	 * @param maxPoolSize 池最大大小，可以小于池初始大小
 	 */
-	public LinkedQueue(INodeFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
-		this(new ConcurrentNodePool<Node<E>>(nodeFactory, poolSize, initPoolSize, maxPoolSize));
+	public LinkedQueue(IObjectFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
+		this(new ConcurrentObjectPool<Node<E>>(nodeFactory, poolSize, initPoolSize, maxPoolSize));
 	}
 	
 	/**
 	 * 使用用户指定的节点池来创建队列
-	 * @param pool 外部用户创建的节点池
+	 * @param cpool 外部用户创建的节点池
 	 */
-	public LinkedQueue(ConcurrentNodePool<Node<E>> cpool){
-		this.cpool = cpool;
+	public LinkedQueue(ConcurrentObjectPool<Node<E>> cpool){
+		this.pool = cpool;
+	}
+	
+	/**
+	 * 使用用户指定的节点池来创建队列
+	 * @param spool 外部用户创建的节点池
+	 */
+	public LinkedQueue(SingleObjectPool<Node<E>> spool){
+		this.pool = spool;
 	}
 	
 	/**
@@ -151,7 +159,7 @@ public class LinkedQueue<E> {
 	}
 	
 	private Node<E> borrowNode(E e){
-		Node<E> n = cpool.borrowObject();
+		Node<E> n = pool.borrowObject();
 		n.setItem(e);
 		return n;
 	}

@@ -5,9 +5,9 @@ package cque;
 
 /**
  * @author Xiong
- *
+ * 对象池接口
  */
-public interface INodePool<E extends INode> extends IRecycler {
+public interface IObjectPool<E extends IPooledObject> extends IRecycler {
 	
 	/**
 	 * 从池中获取一个可用的对象

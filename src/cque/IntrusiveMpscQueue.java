@@ -335,7 +335,7 @@ public class IntrusiveMpscQueue<E extends INode> {
 	private static final long headOffset;
 	static{
 		try{
-			UNSAFE = Unsafe.get();
+			UNSAFE = UnsafeUtils.get();
 			Class k = IntrusiveMpscQueue.class;
 			headOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("head"));
 		}catch (Exception e){

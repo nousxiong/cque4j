@@ -8,17 +8,17 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import cque.Node;
-import cque.NodePool;
+import cque.ObjectPool;
 
 /**
  * @author Xiong
  * 测试单线程节点池
  */
-public class NodePoolBase {
+public class ObjectPoolBase {
 
 	@Test
 	public void test() {
-		NodePool<Node<Long>> pool = new NodePool<Node<Long>>();
+		ObjectPool<Node<Long>> pool = new ObjectPool<Node<Long>>(300000);
 		final int count = 300000;
 		for (int i=0; i<count; ++i){
 			if (i % 3 == 0){

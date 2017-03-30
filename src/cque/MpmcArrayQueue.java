@@ -4,7 +4,7 @@
 package cque;
 
 /**
- * @author Xiong 多读多写的数组队列
+ * @author Xiong 多生产者多消费者的数组队列
  */
 @SuppressWarnings({ "restriction", "unused"})
 public class MpmcArrayQueue<E> {
@@ -41,6 +41,7 @@ public class MpmcArrayQueue<E> {
 		if (item == null){
 			throw new IllegalArgumentException("null values not allowed");
 		}
+		
 		final long i = preEnq();
 		if (i < 0){
 			return false;
@@ -107,7 +108,7 @@ public class MpmcArrayQueue<E> {
 
 	static {
 		try {
-			UNSAFE = Unsafe.get();
+			UNSAFE = UnsafeUtils.get();
 			headOffset = UNSAFE.objectFieldOffset(MpmcArrayQueue.class.getDeclaredField("head"));
 			tailOffset = UNSAFE.objectFieldOffset(MpmcArrayQueue.class.getDeclaredField("tail"));
 

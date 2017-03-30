@@ -5,11 +5,11 @@ package cque;
 
 /**
  * @author Xiong
- * Node的工厂
+ * Node<E>的工厂
  */
-public class NodeFactory<E> implements INodeFactory {
+public class NodeFactory<E> implements IObjectFactory {
 	@Override
-	public INode createInstance(){
+	public IPooledObject createInstance(){
 		return new Node<E>();
 	}
 }
