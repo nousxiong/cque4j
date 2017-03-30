@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cque;
+package cque.util;
 
 import java.lang.reflect.Field;
 

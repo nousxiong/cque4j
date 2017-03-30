@@ -3,6 +3,8 @@
  */
 package cque;
 
+import cque.util.PoolUtils;
+
 /**
  * @author Xiong
  * 非嵌入式单线程队列

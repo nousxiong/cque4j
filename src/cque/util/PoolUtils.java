@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cque;
+package cque.util;
 
 /**
  * @author Xiong

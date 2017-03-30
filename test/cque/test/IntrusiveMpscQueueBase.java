@@ -19,7 +19,7 @@ import cque.IntrusiveMpscQueue;
  * 嵌入式并发队列测试
  */
 public class IntrusiveMpscQueueBase {
-	class Data extends AbstractNode {
+	static class Data extends AbstractNode {
 		private int threadId;
 		private int id;
 		

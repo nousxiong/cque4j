@@ -3,6 +3,8 @@
  */
 package cque;
 
+import cque.util.MpmcArrayQueue;
+
 /**
  * @author Xiong
  * 多生产者多消费者对象池
@@ -21,8 +23,10 @@ public class MpmcObjectPool<E extends IPooledObject> implements IObjectPool<E> {
 		}
 
 		this.que = new MpmcArrayQueue<E>(capacity);
-		for (IPooledObject po : initObjects){
-			this.que.add((E) po);
+		if (initObjects != null){
+			for (IPooledObject po : initObjects){
+				this.que.add((E) po);
+			}
 		}
 	}
 

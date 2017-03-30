@@ -3,6 +3,8 @@
  */
 package cque;
 
+import cque.util.PoolUtils;
+
 /**
  * @author Xiong
  * 单线程节点池

@@ -3,6 +3,8 @@
  */
 package cque;
 
+import cque.util.ArrayQueue;
+
 /**
  * @author Xiong
  * 单线程对象池
@@ -29,8 +31,10 @@ public class ObjectPool<E extends IPooledObject> implements IObjectPool<E> {
 		}
 
 		this.que = new ArrayQueue<E>(capacity);
-		for (IPooledObject po : initObjects){
-			this.que.add((E) po);
+		if (initObjects != null){
+			for (IPooledObject po : initObjects){
+				this.que.add((E) po);
+			}
 		}
 	}
 	

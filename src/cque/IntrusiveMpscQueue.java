@@ -9,6 +9,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import cque.util.UnsafeUtils;
+
 /**
  * @author Xiong
  * 非阻塞、嵌入式多生产者单消费者队列

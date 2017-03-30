@@ -1,7 +1,8 @@
 /**
  * 
  */
-package cque;
+package cque.util;
+
 
 /**
  * @author Xiong 多生产者多消费者的数组队列

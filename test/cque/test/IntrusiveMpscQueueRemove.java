@@ -20,8 +20,7 @@ import cque.IntrusiveMpscQueue;
  * 测试队列remove方法
  */
 public class IntrusiveMpscQueueRemove {
-
-	class Data extends AbstractNode {
+	static class Data extends AbstractNode {
 		private int threadId;
 		private int id;
 		

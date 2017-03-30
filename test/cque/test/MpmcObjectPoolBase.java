@@ -3,24 +3,39 @@
  */
 package cque.test;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
-import cque.util.MpmcArrayQueue;
-import static org.junit.Assert.*;
+import cque.AbstractNode;
+import cque.MpmcObjectPool;
 
 /**
  * @author Xiong
  *
  */
-public class MpmcArrayQueueBase {
-	static class Data {
-		public int i = 1;
-		public String str = "my data";
+public class MpmcObjectPoolBase {
+	static class Data extends AbstractNode {
+		private int threadId;
+		private int id;
+		
+		public Data(int threadId, int id){
+			this.threadId = threadId;
+			this.id = id;
+		}
+		
+		public int getThreadId(){
+			return threadId;
+		}
+		
+		public int getId(){
+			return id;
+		}
 	}
-	
+
 	private static final int ADD_CNT = 100000;
 
 	@Test
@@ -33,16 +48,17 @@ public class MpmcArrayQueueBase {
 	
 	private void handleTest(int index) throws InterruptedException{
 		final int threadNum = Runtime.getRuntime().availableProcessors();
-		final MpmcArrayQueue<Data> arrque = new MpmcArrayQueue<Data>(ADD_CNT * threadNum);
+		final MpmcObjectPool<Data> pool = new MpmcObjectPool<Data>(ADD_CNT * threadNum);
 		List<Thread> ps = new ArrayList<Thread>(threadNum);
 		List<Thread> cs = new ArrayList<Thread>(threadNum);
 		
 		for (int i=0; i<threadNum; ++i){
+			final int tid = i;
 			ps.add(new Thread() {
 				@Override
 				public void run(){
 					for (int i=0; i<ADD_CNT; ++i){
-						arrque.add(new Data());
+						pool.returnObject(new Data(tid, i));
 					}
 				}
 			});
@@ -56,7 +72,7 @@ public class MpmcArrayQueueBase {
 				@Override
 				public void run(){
 					for (int i=0; i<ADD_CNT;){
-						if (arrque.poll() != null){
+						if (pool.borrowObject() != null){
 							++i;
 						}
 					}
@@ -76,7 +92,8 @@ public class MpmcArrayQueueBase {
 			thr.join();
 		}
 		
-		assertTrue(arrque.isEmpty());
+		assertTrue(pool.isEmpty());
 		System.out.println(index+" done.");
 	}
+
 }

@@ -15,7 +15,7 @@ import cque.IntrusiveQueue;
  *
  */
 public class IntrusiveQueueBase {
-	class Data extends AbstractNode {
+	static class Data extends AbstractNode {
 		private int threadId;
 		private int id;
 		

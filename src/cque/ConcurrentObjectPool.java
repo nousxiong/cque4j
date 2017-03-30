@@ -3,6 +3,8 @@
  */
 package cque;
 
+import cque.util.PoolUtils;
+
 /**
  * @author Xiong
  * 并发对象池（多生产者，多消费者），内部可能有多个池

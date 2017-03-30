@@ -18,7 +18,7 @@ import cque.IntrusiveQueue;
  *
  */
 public class IntrusiveQueueRemove {
-	class Data extends AbstractNode {
+	static class Data extends AbstractNode {
 		private int threadId;
 		private int id;
 		

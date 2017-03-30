@@ -18,7 +18,7 @@ import cque.MpscLinkedQueue;
  *
  */
 public class MpscLinkedQueueBase {
-	class Data {
+	static class Data {
 		int threadId;
 		int id;
 		
@@ -40,7 +40,7 @@ public class MpscLinkedQueueBase {
 	@Test
 	public void test() {
 		long eclipse = handleTest(0);
-		for (int i=1; i<10; ++i){
+		for (int i=1; i<5; ++i){
 			eclipse += handleTest(i);
 			eclipse /= 2;
 		}

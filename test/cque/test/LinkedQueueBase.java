@@ -14,7 +14,7 @@ import cque.LinkedQueue;
  *
  */
 public class LinkedQueueBase {
-	class Data {
+	static class Data {
 		int threadId;
 		int id;
 		

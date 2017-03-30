@@ -18,7 +18,7 @@ import cque.MpscLinkedQueue;
  * 测试队列remove方法
  */
 public class MpscLinkedQueueRemove {
-	class Data {
+	static class Data {
 		int threadId;
 		int id;
 		
