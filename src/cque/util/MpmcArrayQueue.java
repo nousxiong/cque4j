@@ -30,7 +30,9 @@ public class MpmcArrayQueue<E> {
 	}
 
 	private static int nextPowerOfTwo(int v) {
-		assert v >= 0;
+		if (v < 0){
+			throw new IllegalArgumentException("v < 0 not allowed");
+		}
 		return 1 << (32 - Integer.numberOfLeadingZeros(v - 1));
 	}
 

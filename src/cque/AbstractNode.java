@@ -10,11 +10,17 @@ package cque;
 public class AbstractNode implements INode {
 	protected INode next;
 	protected IRecycler recycler;
+
+	/**
+	 * 用户如果需要，可以实现此初始化方法
+	 */
+	protected void init(){
+	}
 	
 	/**
 	 * 用户如果需要，可以实现此清理方法
 	 */
-	protected void reset() {
+	protected void reset(){
 	}
 	
 	@Override
@@ -38,6 +44,7 @@ public class AbstractNode implements INode {
 	public void onBorrowed(IRecycler recycler) {
 		this.recycler = recycler;
 		this.next = null;
+		init();
 	}
 	
 	@Override
