@@ -3,61 +3,39 @@
  */
 package cque;
 
+import cque.util.AbstractObject;
+
 /**
  * @author Xiong
- *
+ * 
  */
-public class AbstractNode implements INode {
-	protected INode next;
-	protected IRecycler recycler;
-
+public class AbstractNode extends AbstractObject {
+	volatile AbstractNode next;
+	volatile AbstractNode prev;
+	
 	/**
 	 * 用户如果需要，可以实现此初始化方法
 	 */
-	protected void init(){
+	protected void initNode(){
 	}
 	
 	/**
-	 * 用户如果需要，可以实现此清理方法
+	 * 用户如果需要，可以实现此重置清理方法
 	 */
-	protected void reset(){
+	protected void resetNode(){
 	}
 	
 	@Override
-	public INode getNext() {
-		return next;
-	}
-	
-	@Override
-	public INode fetchNext() {
-		INode n = next;
-		next = null;
-		return n;
-	}
-	
-	@Override
-	public void setNext(INode next) {
-		this.next = next;
-	}
-	
-	@Override
-	public void onBorrowed(IRecycler recycler) {
-		this.recycler = recycler;
+	protected final void initObject(){
 		this.next = null;
-		init();
+		this.prev = null;
+		initNode();
 	}
 	
 	@Override
-	public void onReturn() {
-		reset();
-		next = null;
-		recycler = null;
-	}
-	
-	@Override
-	public void release() {
-		if (recycler != null){
-			recycler.returnObject(this);
-		}
+	protected final void resetObject(){
+		resetNode();
+		this.next = null;
+		this.prev = null;
 	}
 }

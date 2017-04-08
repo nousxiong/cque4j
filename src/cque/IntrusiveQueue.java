@@ -7,9 +7,9 @@ package cque;
  * @author Xiong
  * 嵌入式单线程队列
  */
-public class IntrusiveQueue<E extends INode> {
-	private INode head;
-	private INode tail;
+public class IntrusiveQueue<E extends AbstractNode> {
+	private AbstractNode head;
+	private AbstractNode tail;
 	private int size = 0;
 	
 	/**
@@ -27,7 +27,7 @@ public class IntrusiveQueue<E extends INode> {
 			tail = e;
 			return;
 		}
-		tail.setNext(e);
+		tail.next = e;
 		tail = e;
 	}
 	
@@ -43,21 +43,21 @@ public class IntrusiveQueue<E extends INode> {
 		}
 		
 		// 遍历，尝试查找并移除e
-		for (INode i = head, last = null; i != null; last = i, i = i.getNext()){
+		for (AbstractNode i = head, last = null; i != null; last = i, i = i.next){
 			if (e.equals(i)){
 				// 找到，从链表中移除
 				if (last == null){
 					if (head == tail){
-						tail = i.getNext();
+						tail = i.next;
 					}
-					head = i.getNext();
+					head = i.next;
 				}else{
-					last.setNext(i.getNext());
+					last.next = i.next;
 					if (i == tail){
 						tail = last;
 					}
 				}
-				i.setNext(null);
+				i.next = null;
 				--size;
 				return true;
 			}
@@ -71,7 +71,7 @@ public class IntrusiveQueue<E extends INode> {
 	 */
 	public void clear(){
 		while (true){
-			INode n = pollNode();
+			AbstractNode n = pollNode();
 			if (n == null){
 				break;
 			}
@@ -85,6 +85,19 @@ public class IntrusiveQueue<E extends INode> {
 	@SuppressWarnings("unchecked")
 	public E poll(){
 		return (E) pollNode();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public E peek(){
+		return (E) head;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public E next(E prev){
+		if (prev != null){
+			return (E) prev.next;
+		}
+		return null;
 	}
 	
 	/**
@@ -103,13 +116,14 @@ public class IntrusiveQueue<E extends INode> {
 		return size() == 0;
 	}
 	
-	private INode pollNode(){
+	private AbstractNode pollNode(){
 		if (head == null){
 			return null;
 		}
 		
-		INode n = head;
-		head = n.fetchNext();
+		AbstractNode n = head;
+		head = n.next;
+		n.next = null;
 		if (head == null){
 			assert n == tail;
 			tail = null;

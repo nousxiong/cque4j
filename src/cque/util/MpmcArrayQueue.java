@@ -111,7 +111,7 @@ public class MpmcArrayQueue<E> {
 
 	static {
 		try {
-			UNSAFE = UnsafeUtils.get();
+			UNSAFE = UnsafeUtils.getUnsafe();
 			headOffset = UNSAFE.objectFieldOffset(MpmcArrayQueue.class.getDeclaredField("head"));
 			tailOffset = UNSAFE.objectFieldOffset(MpmcArrayQueue.class.getDeclaredField("tail"));
 

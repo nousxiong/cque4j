@@ -9,17 +9,18 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
 import cque.AbstractNode;
-import cque.IntrusiveMpscQueue;
+import cque.IntrusiveSyncLinkedQueue;
 
 /**
  * @author Xiong
- * 测试队列remove方法
+ *
  */
-public class IntrusiveMpscQueueRemove {
+public class IntrusiveSyncLinkedQueueRemove {
 	static class Data extends AbstractNode {
 		private int threadId;
 		private int id;
@@ -38,7 +39,7 @@ public class IntrusiveMpscQueueRemove {
 		}
 	}
 	
-	static final IntrusiveMpscQueue<Data> que = new IntrusiveMpscQueue<Data>();
+	static final IntrusiveSyncLinkedQueue<Data> que = new IntrusiveSyncLinkedQueue<Data>();
 	
 	@Test
 	public void test() {
@@ -59,7 +60,7 @@ public class IntrusiveMpscQueueRemove {
 		List<Integer> producerIds = new ArrayList<Integer>(threadNum);
 		final ConcurrentHashMap<Data, Integer> removes = new ConcurrentHashMap<Data, Integer>();
 		
-		long bt = System.currentTimeMillis();
+		long bt = System.nanoTime();
 		for (int i=0; i<threadNum; ++i){
 			final int threadId = i;
 			producerIds.add(-1);
@@ -95,6 +96,9 @@ public class IntrusiveMpscQueueRemove {
 		System.out.println(que.size());
 		assertTrue(que.size() == totalSize - totalRemoveSize);
 		
+		que.clear();
+		assertTrue(que.size() == 0 && que.isEmpty());
+		
 		for (Thread thr : thrs){
 			try{
 				thr.join();
@@ -103,12 +107,9 @@ public class IntrusiveMpscQueueRemove {
 			}
 		}
 		
-		que.clear();
-		assertTrue(que.size() == 0);
-		
-		long eclipse = System.currentTimeMillis() - bt;
+		long eclipse = System.nanoTime() - bt;
 		System.out.println(index + " done.");
-		return eclipse;
+		return TimeUnit.NANOSECONDS.toMillis(eclipse);
 	}
 
 }

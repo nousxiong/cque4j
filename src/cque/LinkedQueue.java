@@ -4,14 +4,15 @@
 package cque;
 
 import cque.util.PoolUtils;
+import cque.util.NodeFactory;
 
 /**
  * @author Xiong
  * 非嵌入式单线程队列
  */
 public class LinkedQueue<E> {
-	private INode head;
-	private INode tail;
+	private AbstractNode head;
+	private AbstractNode tail;
 	private IPolicyObjectPool<Node<E>> pool;
 	private int size = 0;
 	
@@ -65,7 +66,7 @@ public class LinkedQueue<E> {
 			tail = n;
 			return;
 		}
-		tail.setNext(n);
+		tail.next = n;
 		tail = n;
 	}
 	
@@ -81,16 +82,16 @@ public class LinkedQueue<E> {
 		}
 		
 		// 遍历，尝试查找并移除e
-		for (INode i = head, last = null; i != null; last = i, i = i.getNext()){
-			if (e.equals(((Node<E>) i).getItem())){
+		for (AbstractNode i = head, last = null; i != null; last = i, i = i.next){
+			if (e.equals(((Node<E>) i).value)){
 				// 找到，从链表中移除
 				if (last == null){
 					if (head == tail){
-						tail = i.getNext();
+						tail = i.next;
 					}
-					head = i.getNext();
+					head = i.next;
 				}else{
-					last.setNext(i.getNext());
+					last.next = i.next;
 					if (i == tail){
 						tail = last;
 					}
@@ -108,7 +109,7 @@ public class LinkedQueue<E> {
 	 * @return 如果队列空返回null；反之一个有效的元素
 	 */
 	public E poll(){
-		INode n = pollNode();
+		AbstractNode n = pollNode();
 		if (n != null){
 			return returnNode(n);
 		}else{
@@ -137,7 +138,7 @@ public class LinkedQueue<E> {
 	 */
 	public void clear(){
 		while (true){
-			INode n = pollNode();
+			AbstractNode n = pollNode();
 			if (n == null){
 				break;
 			}
@@ -145,13 +146,14 @@ public class LinkedQueue<E> {
 		}
 	}
 	
-	private INode pollNode(){
+	private AbstractNode pollNode(){
 		if (head == null){
 			return null;
 		}
 		
-		INode n = head;
-		head = n.fetchNext();
+		AbstractNode n = head;
+		head = n.next;
+		n.next = null;
 		if (head == null){
 			assert n == tail;
 			tail = null;
@@ -162,14 +164,14 @@ public class LinkedQueue<E> {
 	
 	private Node<E> borrowNode(E e){
 		Node<E> n = pool.borrowObject();
-		n.setItem(e);
+		n.value = e;
 		return n;
 	}
 	
 	@SuppressWarnings("unchecked")
-	private E returnNode(INode n){
+	private E returnNode(AbstractNode n){
 		Node<E> node = (Node<E>) n;
-		E e = node.getItem();
+		E e = node.value;
 		n.release();
 		return e;
 	}

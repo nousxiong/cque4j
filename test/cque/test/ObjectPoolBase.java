@@ -7,8 +7,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import cque.Node;
 import cque.ObjectPool;
+import cque.Node;
 
 /**
  * @author Xiong

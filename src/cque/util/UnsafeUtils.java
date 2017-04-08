@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
  */
 @SuppressWarnings({ "restriction" })
 public final class UnsafeUtils {
-	public static final sun.misc.Unsafe get() throws Exception{
+	public static final sun.misc.Unsafe getUnsafe() throws Exception{
 		// 用反射绕过Unsafe的验证代码
 		Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
 		f.setAccessible(true);

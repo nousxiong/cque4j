@@ -57,17 +57,24 @@ public class ConcurrentObjectPool<E extends IPooledObject> implements IPolicyObj
 	@SuppressWarnings("unchecked")
 	@Override
 	public E borrowObject(){
-		int i = polling;
-		if (i >= poolSize){
-			i = 0;
+		int i = 0;
+		if (poolSize > 1){
+			i = polling;
+			if (i >= poolSize){
+				i = 0;
+			}
 		}
+		
 		MpmcObjectPool<E> pool = pools[i];
 		IPooledObject po = pool.borrowObject();
 		if (po == null){
 			po = objectFactory.createInstance();
 			po.onBorrowed(pool);
 		}
-		polling = i;
+		
+		if (poolSize > 1){
+			polling = ++i;
+		}
 		return (E) po;
 	}
 }
