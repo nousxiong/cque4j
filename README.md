@@ -19,7 +19,7 @@ Example (Non-Intrusive)
 import java.util.ArrayList;
 import java.util.List;
 
-import cque.MpscLinkedQueue;
+import cque.MpscSyncLinkedQueue;
 
 /**
  * @author Xiong
@@ -43,7 +43,7 @@ public class Example {
 		}
 	}
 	
-	static final MpscLinkedQueue<Data> que = new MpscLinkedQueue<Data>();
+	static final MpscSyncLinkedQueue<Data> que = new MpscSyncLinkedQueue<Data>();
 	
 	public void test(){
 		final int addSize = 100000;
@@ -102,9 +102,7 @@ Example (Intrusive)
 import java.util.ArrayList;
 import java.util.List;
 
-import cque.IFreer;
-import cque.INode;
-import cque.IntrusiveMpscQueue;
+import cque.IntrusiveSyncLinkedQueue;
 
 /**
  * @author Xiong
@@ -128,7 +126,7 @@ public class Example {
 		}
 	}
 	
-	static final IntrusiveMpscQueue<Data> que = new IntrusiveMpscQueue<Data>();
+	static final IntrusiveSyncLinkedQueue<Data> que = new IntrusiveSyncLinkedQueue<Data>();
 
 	public long test(){
 		final int addSize = 100000;

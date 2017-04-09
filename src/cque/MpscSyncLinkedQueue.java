@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import cque.util.ISynchronizer;
 import cque.util.PoolUtils;
 import cque.util.NodeFactory;
+import cque.util.RuntimeInterruptedException;
 import cque.util.ThreadSynchronizer;
 import cque.util.UnsafeUtils;
 
@@ -62,6 +63,10 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		this.cpool = cpool;
 	}
 	
+	/**
+	 * 生产者，放入队列一个元素，如果队列正在阻塞中，唤醒它
+	 * @param e
+	 */
 	public void put(E e){
 		add(e);
 		if (sync.shouldSignal() /*&& peek() == e*/){
@@ -69,6 +74,10 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		}
 	}
 	
+	/**
+	 * 消费者，从队列中取出一个元素，如果队列空，则一直阻塞等待直到有元素或者中断
+	 * @return
+	 */
 	public E take(){
 		E e = poll();
 		if (e == null){
@@ -80,7 +89,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 					e = poll();
 				}
 			}catch (InterruptedException ie){
-				throw new RuntimeException("InterruptedException");
+				throw new RuntimeInterruptedException(ie);
 			}finally{
 				sync.unregister();
 			}
@@ -88,6 +97,10 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		return e;
 	}
 
+	/**
+	 * 消费者，尝试从队列中获取一个元素，可能返回空，不会阻塞
+	 * @return
+	 */
 	public E poll() {
 		final Node<E> n = peekNode();
 		if (n == null){
@@ -100,6 +113,12 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		return v;
 	}
 
+	/**
+	 * 消费者，从队列中获取一个元素，如果队列空，则阻塞指定的时间等待
+	 * @param timeout
+	 * @param unit
+	 * @return
+	 */
 	public E poll(long timeout, TimeUnit unit){
 		E e = poll();
 		if (e == null){
@@ -115,7 +134,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 					e = poll();
 				}
 			}catch (InterruptedException ie){
-				throw new RuntimeException("InterruptedException");
+				throw new RuntimeInterruptedException(ie);
 			}finally{
 				sync.unregister();
 			}
@@ -123,11 +142,20 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		return e;
 	}
 
+	/**
+	 * 消费者，返回当前队列的头部，但不移除
+	 * @return
+	 */
 	public E peek() {
 		final Node<E> n = peekNode();
 		return n != null ? value(n) : null;
 	}
 	
+	/**
+	 * 生产者，放入队列一个元素，不会阻塞队列，这个方法永远返回成功
+	 * @param e
+	 * @return
+	 */
 	public boolean add(E e){
 		if (e == null){
 			throw new IllegalArgumentException("null values not allowed");
@@ -138,6 +166,11 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		return enq(node);
 	}
 	
+	/**
+	 * 消费者，尝试查找并移除指定的元素，使用Object.equals方法比较
+	 * @param e
+	 * @return
+	 */
 	public boolean remove(E e){
 		if (e == null){
 			return false;
@@ -155,6 +188,9 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		return false;
 	}
 	
+	/**
+	 * 消费者，清空队列
+	 */
 	public void clear(){
 		Node<E> node = null;
 		while ((node = peekNode()) != null){
@@ -163,6 +199,10 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		}
 	}
 	
+	/**
+	 * 返回当前队列大小
+	 * @return
+	 */
 	public int size() {
 		int n = 0;
 		for (AbstractNode p = tail; p != null; p = p.prev) {
@@ -171,10 +211,17 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		return n;
 	}
 	
+	/**
+	 * 是否队列为空
+	 * @return
+	 */
 	public boolean isEmpty(){
 		return peekNode() == null;
 	}
 
+	/**
+	 * 返回一个迭代器
+	 */
 	@Override
 	public QueueIterator<E> iterator(){
 		return new LinkedQueueIterator();

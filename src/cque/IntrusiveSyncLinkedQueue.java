@@ -6,6 +6,7 @@ package cque;
 import java.util.concurrent.TimeUnit;
 
 import cque.util.ISynchronizer;
+import cque.util.RuntimeInterruptedException;
 import cque.util.ThreadSynchronizer;
 import cque.util.UnsafeUtils;
 
@@ -32,6 +33,10 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		this.sync = sync;
 	}
 	
+	/**
+	 * 生产者，放入队列一个元素，如果队列正在阻塞中，唤醒它
+	 * @param e
+	 */
 	public void put(E e){
 		add(e);
 		if (sync.shouldSignal() /*&& peek() == e*/){
@@ -39,6 +44,10 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		}
 	}
 	
+	/**
+	 * 消费者，从队列中取出一个元素，如果队列空，则一直阻塞等待直到有元素或者中断
+	 * @return
+	 */
 	public E take(){
 		E e = poll();
 		if (e == null){
@@ -50,7 +59,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 					e = poll();
 				}
 			}catch (InterruptedException ie){
-				throw new RuntimeException("InterruptedException");
+				throw new RuntimeInterruptedException(ie);
 			}finally{
 				sync.unregister();
 			}
@@ -58,6 +67,10 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		return e;
 	}
 
+	/**
+	 * 消费者，尝试从队列中获取一个元素，可能返回空，不会阻塞
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public E poll() {
 		final AbstractNode n = peekNode();
@@ -69,6 +82,12 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		return (E) n;
 	}
 
+	/**
+	 * 消费者，从队列中获取一个元素，如果队列空，则阻塞指定的时间等待
+	 * @param timeout
+	 * @param unit
+	 * @return
+	 */
 	public E poll(long timeout, TimeUnit unit){
 		E e = poll();
 		if (e == null){
@@ -84,7 +103,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 					e = poll();
 				}
 			}catch (InterruptedException ie){
-				throw new RuntimeException("InterruptedException");
+				throw new RuntimeInterruptedException(ie);
 			}finally{
 				sync.unregister();
 			}
@@ -92,11 +111,20 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		return e;
 	}
 
+	/**
+	 * 消费者，返回当前队列的头部，但不移除
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public E peek() {
 		return (E) peekNode();
 	}
 	
+	/**
+	 * 生产者，放入队列一个元素，不会阻塞队列，这个方法永远返回成功
+	 * @param e
+	 * @return
+	 */
 	public boolean add(final E e) {
 		AbstractNode t = null;
 		do {
@@ -111,6 +139,12 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		return true;
 	}
 	
+	/**
+	 * 消费者，尝试查找并移除指定的元素，使用Object.equals方法比较
+	 * 如果两个对象不是一个地址，则调用release释放移除的对象
+	 * @param e
+	 * @return
+	 */
 	public boolean remove(E e){
 		if (e == null){
 			return false;
@@ -121,7 +155,9 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 			AbstractNode n = itr.next();
 			if (e.equals(n)){
 				itr.remove();
-				n.release();
+				if (n != e){
+					n.release();
+				}
 				return true;
 			}
 		}
@@ -129,6 +165,9 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		return false;
 	}
 	
+	/**
+	 * 消费者，清空队列
+	 */
 	public void clear(){
 		AbstractNode node = null;
 		while ((node = poll()) != null){
@@ -136,6 +175,10 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		}
 	}
 	
+	/**
+	 * 返回当前队列大小
+	 * @return
+	 */
 	public int size() {
 		int n = 0;
 		for (AbstractNode p = tail; p != null; p = p.prev) {
@@ -144,10 +187,17 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		return n;
 	}
 	
+	/**
+	 * 是否队列为空
+	 * @return
+	 */
 	public boolean isEmpty() {
 		return peekNode() == null;
 	}
 
+	/**
+	 * 返回一个迭代器
+	 */
 	@Override
 	public QueueIterator<E> iterator(){
 		return new LinkedQueueIterator();
@@ -279,9 +329,6 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		}
 	}
 
-	/**
-	 * CAS head field. Used only by enq.
-	 */
 	boolean compareAndSetHead(AbstractNode update) {
 		return UNSAFE.compareAndSwapObject(this, headOffset, null, update);
 	}
@@ -294,18 +341,11 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		UNSAFE.putObjectVolatile(this, headOffset, value);
 	}
 
-	/**
-	 * CAS tail field. Used only by enq.
-	 */
 	boolean compareAndSetTail(AbstractNode expect, AbstractNode update) {
 		return UNSAFE.compareAndSwapObject(this, tailOffset, expect, update);
 	}
 
-	/**
-	 * CAS next field of a node.
-	 */
-	static boolean compareAndSetNext(AbstractNode node,
-			AbstractNode expect, AbstractNode update) {
+	static boolean compareAndSetNext(AbstractNode node, AbstractNode expect, AbstractNode update) {
 		return UNSAFE.compareAndSwapObject(node, nextOffset, expect, update);
 	}
 
