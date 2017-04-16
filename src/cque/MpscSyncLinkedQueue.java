@@ -167,6 +167,27 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 	}
 	
 	/**
+	 * 消费者，队列是否包含指定的元素，使用Object.equals方法比较
+	 * @param e
+	 * @return
+	 */
+	public boolean contains(E e){
+		if (e == null){
+			return false;
+		}
+		
+		QueueIterator<E> itr = iterator();
+		while (itr.hasNext()){
+			E ne = itr.next();
+			if (e.equals(ne)){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * 消费者，尝试查找并移除指定的元素，使用Object.equals方法比较
 	 * @param e
 	 * @return
