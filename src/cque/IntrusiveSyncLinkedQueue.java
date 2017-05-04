@@ -4,6 +4,7 @@
 package cque;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import cque.util.ISynchronizer;
 import cque.util.RuntimeInterruptedException;
@@ -17,13 +18,14 @@ import cque.util.UnsafeUtils;
 @SuppressWarnings("restriction")
 public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterable<E> {
 	private ISynchronizer sync;
+	private AtomicInteger size = new AtomicInteger(0);
 	volatile Object p001, p002, p003, p004, p005, p006, p007, p008, p009, p010, p011, p012, p013, p014, p015;
 	volatile AbstractNode head;
 	volatile Object p101, p102, p103, p104, p105, p106, p107, p108, p109, p110, p111, p112, p113, p114, p115;
 	volatile AbstractNode tail;
 	
 	public IntrusiveSyncLinkedQueue(){
-		sync = new ThreadSynchronizer();
+		this(new ThreadSynchronizer());
 	}
 	
 	public IntrusiveSyncLinkedQueue(ISynchronizer sync){
@@ -136,6 +138,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 		}else{
 			t.next = e;
 		}
+		size.incrementAndGet();
 		return true;
 	}
 	
@@ -202,11 +205,12 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 	 * @return
 	 */
 	public int size() {
-		int n = 0;
-		for (AbstractNode p = tail; p != null; p = p.prev) {
-			n++;
-		}
-		return n;
+//		int n = 0;
+//		for (AbstractNode p = tail; p != null; p = p.prev) {
+//			n++;
+//		}
+//		return n;
+		return size.get();
 	}
 	
 	/**
@@ -214,7 +218,8 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 	 * @return
 	 */
 	public boolean isEmpty() {
-		return peekNode() == null;
+//		return peekNode() == null;
+		return size.get() == 0;
 	}
 
 	/**
@@ -244,6 +249,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 
 		clearNext(node);
 		clearPrev(node);
+		size.decrementAndGet();
 		return prev;
 	}
 	
@@ -304,6 +310,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 			orderedSetHead(null);
 			if (tail == node && compareAndSetTail(node, null)) {
 				node.next = null;
+				size.decrementAndGet();
 				return;
 			}
 			while ((h = node.next) == null)
@@ -314,6 +321,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 
 		clearNext(node);
 		clearPrev(node);
+		size.decrementAndGet();
 	}
 
 	private AbstractNode peekNode() {

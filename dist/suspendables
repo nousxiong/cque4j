@@ -1,6 +1,6 @@
-cque.IntrusiveSyncLinkedQueue.put
-cque.IntrusiveSyncLinkedQueue.take
-cque.IntrusiveSyncLinkedQueue.poll
-cque.MpscSyncLinkedQueue.put
-cque.MpscSyncLinkedQueue.take
-cque.MpscSyncLinkedQueue.poll
+cque.IntrusiveSuspendedQueue.put
+cque.IntrusiveSuspendedQueue.take
+cque.IntrusiveSuspendedQueue.poll
+cque.MpscSuspendedQueue.put
+cque.MpscSuspendedQueue.take
+cque.MpscSuspendedQueue.poll

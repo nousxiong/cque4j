@@ -4,6 +4,7 @@
 package cque;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import cque.util.ISynchronizer;
 import cque.util.PoolUtils;
@@ -20,10 +21,12 @@ import cque.util.UnsafeUtils;
 public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 	private ISynchronizer sync;
 	private ConcurrentObjectPool<Node<E>> cpool;
+	private AtomicInteger size = new AtomicInteger(0);
 	volatile Object p001, p002, p003, p004, p005, p006, p007, p008, p009, p010, p011, p012, p013, p014, p015;
 	volatile Node head;
 	volatile Object p101, p102, p103, p104, p105, p106, p107, p108, p109, p110, p111, p112, p113, p114, p115;
 	volatile Node tail;
+	
 	
 	public MpscSyncLinkedQueue(){
 		this(new NodeFactory<E>(), PoolUtils.DEFAULT_POOL_SIZE, PoolUtils.DEFAULT_INIT_SIZE, PoolUtils.DEFAULT_MAX_SIZE);
@@ -225,11 +228,12 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 	 * @return
 	 */
 	public int size() {
-		int n = 0;
-		for (AbstractNode p = tail; p != null; p = p.prev) {
-			n++;
-		}
-		return n;
+//		int n = 0;
+//		for (AbstractNode p = tail; p != null; p = p.prev) {
+//			n++;
+//		}
+//		return n;
+		return size.get();
 	}
 	
 	/**
@@ -237,7 +241,8 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 	 * @return
 	 */
 	public boolean isEmpty(){
-		return peekNode() == null;
+//		return peekNode() == null;
+		return size.get() == 0;
 	}
 
 	/**
@@ -276,6 +281,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		}else{
 			t.next = node;
 		}
+		size.incrementAndGet();
 		return true;
 	}
 	
@@ -301,6 +307,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 
 		clearNext(node);
 		clearPrev(node);
+		size.decrementAndGet();
 		return (Node<E>) prev;
 	}
 	
@@ -357,6 +364,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 			orderedSetHead(null);
 			if (tail == node && compareAndSetTail(node, null)){
 				node.next = null;
+				size.decrementAndGet();
 				return;
 			}
 			while ((h = node.next) == null)
@@ -367,6 +375,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 
 		clearNext(node);
 		clearPrev(node);
+		size.decrementAndGet();
 	}
 
 	@SuppressWarnings("unchecked")
