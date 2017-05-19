@@ -17,23 +17,12 @@ import cque.util.UnsafeUtils;
  */
 @SuppressWarnings("restriction")
 public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterable<E> {
-	private ISynchronizer sync;
+	private ISynchronizer sync = new ThreadSynchronizer();
 	private AtomicInteger size = new AtomicInteger(0);
 	volatile Object p001, p002, p003, p004, p005, p006, p007, p008, p009, p010, p011, p012, p013, p014, p015;
 	volatile AbstractNode head;
 	volatile Object p101, p102, p103, p104, p105, p106, p107, p108, p109, p110, p111, p112, p113, p114, p115;
 	volatile AbstractNode tail;
-	
-	public IntrusiveSyncLinkedQueue(){
-		this(new ThreadSynchronizer());
-	}
-	
-	public IntrusiveSyncLinkedQueue(ISynchronizer sync){
-		if (sync == null){
-			throw new IllegalArgumentException("sync null values not allowed");
-		}
-		this.sync = sync;
-	}
 	
 	/**
 	 * 生产者，放入队列一个元素，如果队列正在阻塞中，唤醒它

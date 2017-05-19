@@ -19,7 +19,7 @@ import cque.util.UnsafeUtils;
  */
 @SuppressWarnings({ "restriction", "rawtypes"})
 public class MpscSyncLinkedQueue<E> implements Iterable<E> {
-	private ISynchronizer sync;
+	private ISynchronizer sync = new ThreadSynchronizer();
 	private ConcurrentObjectPool<Node<E>> cpool;
 	private AtomicInteger size = new AtomicInteger(0);
 	volatile Object p001, p002, p003, p004, p005, p006, p007, p008, p009, p010, p011, p012, p013, p014, p015;
@@ -32,20 +32,7 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 		this(new NodeFactory<E>(), PoolUtils.DEFAULT_POOL_SIZE, PoolUtils.DEFAULT_INIT_SIZE, PoolUtils.DEFAULT_MAX_SIZE);
 	}
 	
-	public MpscSyncLinkedQueue(ISynchronizer sync){
-		this(sync, new NodeFactory<E>(), PoolUtils.DEFAULT_POOL_SIZE, PoolUtils.DEFAULT_INIT_SIZE, PoolUtils.DEFAULT_MAX_SIZE);
-	}
-	
 	public MpscSyncLinkedQueue(IObjectFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
-		this(new ThreadSynchronizer(), new NodeFactory<E>(), poolSize, initPoolSize, maxPoolSize);
-	}
-	
-	public MpscSyncLinkedQueue(ISynchronizer sync, IObjectFactory nodeFactory, int poolSize, int initPoolSize, int maxPoolSize){
-		if (sync == null){
-			throw new IllegalArgumentException("sync null values not allowed");
-		}
-		
-		this.sync = sync;
 		this.cpool = new ConcurrentObjectPool<Node<E>>(nodeFactory, poolSize, initPoolSize, maxPoolSize);
 	}
 	
@@ -54,15 +41,6 @@ public class MpscSyncLinkedQueue<E> implements Iterable<E> {
 	 * @param cpool 外部用户创建的节点池
 	 */
 	public MpscSyncLinkedQueue(ConcurrentObjectPool<Node<E>> cpool){
-		this(new ThreadSynchronizer(), cpool);
-	}
-	
-	public MpscSyncLinkedQueue(ISynchronizer sync, ConcurrentObjectPool<Node<E>> cpool){
-		if (sync == null){
-			throw new IllegalArgumentException("sync null values not allowed");
-		}
-		
-		this.sync = sync;
 		this.cpool = cpool;
 	}
 	
