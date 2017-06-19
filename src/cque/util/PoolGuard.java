@@ -3,6 +3,8 @@
  */
 package cque.util;
 
+import java.io.Closeable;
+
 import cque.AbstractNode;
 import cque.IPooledObject;
 
@@ -10,7 +12,7 @@ import cque.IPooledObject;
  * @author Xiong
  *
  */
-public class PoolGuard extends AbstractNode implements AutoCloseable {
+public class PoolGuard extends AbstractNode implements Closeable {
 	private IPooledObject po = null;
 
 	public <T extends IPooledObject> void protect(IPooledObject po){
@@ -23,7 +25,7 @@ public class PoolGuard extends AbstractNode implements AutoCloseable {
 	}
 	
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		if (po != null){
 			po.release();
 			po = null;
