@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import cque.util.ISynchronizer;
 import cque.util.NodeFactory;
 import cque.util.PoolUtils;
-import cque.util.RuntimeInterruptedException;
 import cque.util.ThreadSynchronizer;
 import cque.util.UnsafeUtils;
 
@@ -81,7 +80,7 @@ public class MpscSuspendedQueue<E> implements Iterable<E> {
 	 * 消费者，从队列中取出一个元素，如果队列空，则一直阻塞等待直到有元素或者中断
 	 * @return
 	 */
-	public E take(){
+	public E take() throws InterruptedException {
 		E e = poll();
 		if (e == null){
 			sync.register();
@@ -91,8 +90,6 @@ public class MpscSuspendedQueue<E> implements Iterable<E> {
 					sync.await();
 					e = poll();
 				}
-			}catch (InterruptedException ie){
-				throw new RuntimeInterruptedException(ie);
 			}finally{
 				sync.unregister();
 			}
@@ -122,7 +119,7 @@ public class MpscSuspendedQueue<E> implements Iterable<E> {
 	 * @param unit
 	 * @return
 	 */
-	public E poll(long timeout, TimeUnit unit){
+	public E poll(long timeout, TimeUnit unit) throws InterruptedException {
 		E e = poll();
 		if (e == null){
 			long left = unit.toNanos(timeout);
@@ -136,8 +133,6 @@ public class MpscSuspendedQueue<E> implements Iterable<E> {
 					}
 					e = poll();
 				}
-			}catch (InterruptedException ie){
-				throw new RuntimeInterruptedException(ie);
 			}finally{
 				sync.unregister();
 			}

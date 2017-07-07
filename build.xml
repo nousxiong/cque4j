@@ -3,7 +3,8 @@
 	<property name="src" value="src"/>
 	<property name="dest" value="dist/classes" />
 	<property name="dist" value="dist/lib" />
-	<property name="dist_jar" value="${dist}/cque.jar" />
+	<property name="version" value="1.0.0"/>
+	<property name="dist_jar" value="${dist}/cque-${version}.jar" />
 
 	<target name="clean">
 		<delete file="${dist_jar}" />

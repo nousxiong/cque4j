@@ -111,7 +111,12 @@ public class IntrusiveSyncLinkedQueueBase {
 		for (int i=0; i<pollSize; ){
 //			Data d = que.poll();
 //			Data d = que.take();
-			Data d = que.poll(3000, TimeUnit.MILLISECONDS);
+			Data d;
+			try {
+				d = que.poll(3000, TimeUnit.MILLISECONDS);
+			} catch (InterruptedException e) {
+				break;
+			}
 			if (d != null){
 				if (checkData){
 					int tid = d.getThreadId();
@@ -135,7 +140,6 @@ public class IntrusiveSyncLinkedQueueBase {
 			try{
 				thr.join();
 			}catch (InterruptedException e){
-				System.out.println(e.getMessage());
 			}
 		}
 		
