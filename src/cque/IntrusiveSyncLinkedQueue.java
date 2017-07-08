@@ -78,7 +78,7 @@ public class IntrusiveSyncLinkedQueue<E extends AbstractNode> implements Iterabl
 	 */
 	public E poll(long timeout, TimeUnit unit) throws InterruptedException {
 		E e = poll();
-		if (e == null){
+		if (timeout > 0 && e == null){
 			long left = unit.toNanos(timeout);
 			sync.register();
 			try{
